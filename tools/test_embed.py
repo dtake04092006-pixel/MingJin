@@ -107,10 +107,10 @@ def main() -> int:
     check.eq("chưa gán người chơi → tên bot", embed.to_dict()["author"]["name"], "Khí Tuyệt Lục")
 
     # 10. tổng kiếp của bot thắng số của tracker
-    embed = build_embed(make_event(death_no=3, total=1), verse=texts.VERSES[9], lifetime=520)
+    embed = build_embed(make_event(death_no=3, total=1), verse=texts.VERSES[9], lifetime=700)
     data = embed.to_dict()
-    check.eq("lifetime 520 → màu 無間", data["color"], 0x360A15)
-    check.eq("field tổng kiếp = #520", data["fields"][1]["value"], "#520")
+    check.eq("lifetime 700 → màu 無間", data["color"], 0x1E0A11)
+    check.eq("field tổng kiếp = #700", data["fields"][1]["value"], "#700")
     check.eq("bậc cuối vẫn một dòng", len(data["fields"][3]["value"].split("\n")), 1)
 
     print("\n=== Kho chữ ===")
@@ -118,18 +118,22 @@ def main() -> int:
     check.eq("turn 10", texts.turn_label(10), ("第十", "Thập"))
     check.eq("turn 11", texts.turn_label(11), ("", "11"))
     check.eq("turn 0", texts.turn_label(0), ("", ""))
-    print("\n=== Cảnh giới (50 mạng/bậc, dừng ở 500) ===")
+    print("\n=== Cảnh giới (50 mạng/bậc, 15 bậc, dừng ở 700) ===")
     check.eq("0 mạng → 未染", texts.realm_for(0).cn, "未染")
     check.eq("39 mạng → 未染", texts.realm_for(39).cn, "未染")
     check.eq("49 mạng → 未染", texts.realm_for(49).cn, "未染")
     check.eq("50 mạng → 染血", texts.realm_for(50).cn, "染血")
     check.eq("99 mạng → 染血", texts.realm_for(99).cn, "染血")
     check.eq("250 mạng → 入魔", texts.realm_for(250).cn, "入魔")
-    check.eq("499 mạng → 修羅", texts.realm_for(499).cn, "修羅")
-    check.eq("500 mạng → 無間", texts.realm_for(500).cn, "無間")
+    check.eq("450 mạng → 黃泉", texts.realm_for(450).cn, "黃泉")
+    check.eq("499 mạng → 黃泉", texts.realm_for(499).cn, "黃泉")
+    check.eq("699 mạng → 阿鼻", texts.realm_for(699).cn, "阿鼻")
+    check.eq("700 mạng → 無間", texts.realm_for(700).cn, "無間")
     check.eq("9999 mạng vẫn 無間", texts.realm_for(9999).cn, "無間")
     check.eq("None → 未染", texts.realm_for(None).cn, "未染")
-    check.eq("bậc cuối không có bậc kế", texts.next_realm(500), None)
+    check.eq("đúng 15 bậc", len(texts.REALMS), 15)
+    check.eq("REALM_MAX khớp bậc cuối", texts.REALM_MAX, 700)
+    check.eq("bậc cuối không có bậc kế", texts.next_realm(700), None)
     check.eq("bậc kế của 39 mạng", texts.next_realm(39).cn, "染血")
 
     def _lum(colour: int) -> float:
@@ -164,17 +168,23 @@ def main() -> int:
     check.ok("trạng thái bậc ≤ 26 ký tự", len(longest_status) <= 26, f"{len(longest_status)}: {longest_status}")
 
     print("\n=== Ảnh số đếm ở góc phải ===")
-    check.eq("52 kiếp cùng màu 染血 → PNG", render_count_png(52, 0x8A5A2B)[:4], b"\x89PNG")
-    check.ok("ảnh số đếm có nội dung thật", len(render_count_png(52, 0x8A5A2B)) > 1500, str(len(render_count_png(52, 0x8A5A2B))))
+    badge = render_count_png(52, 0x9F632E, 1)
+    check.eq("52 kiếp cùng màu 染血 → PNG", badge[:4], b"\x89PNG")
+    check.ok("ảnh số đếm có nội dung thật", len(badge) > 2000, str(len(badge)))
     check.ok(
-        "số đếm đổi màu theo bậc",
-        render_count_png(52, 0x8A5A2B) != render_count_png(52, 0x360A15),
+        "số đếm đổi theo bậc (màu + vết máu)",
+        badge != render_count_png(52, 0x1E0A11, 14),
         "hai bậc phải ra hai ảnh khác nhau",
     )
     check.ok(
-        "bậc cuối vẫn đọc được: số sáng hơn màu thanh",
-        _lum(sum(c << s for c, s in zip(lit_colour(0x360A15), (16, 8, 0)))) > _lum(0x360A15),
-        str(lit_colour(0x360A15)),
+        "cùng số, bậc cao hơn → vết máu nham nhở hơn",
+        render_count_png(400, 0x35111B, 8) != render_count_png(400, 0x35111B, 12),
+        "bậc phải ảnh hưởng tới hình",
+    )
+    check.ok(
+        "bậc cuối vẫn đọc được: vết máu sáng hơn màu thanh",
+        _lum(sum(c << s for c, s in zip(lit_colour(0x1E0A11), (16, 8, 0)))) > _lum(0x1E0A11),
+        str(lit_colour(0x1E0A11)),
     )
 
     print("\n=== Lưu cấu hình ===")

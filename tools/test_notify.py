@@ -137,7 +137,7 @@ def main() -> int:
     store.set_deaths(49)
     asyncio.run(notifier.dispatch(make_event(event_id="r2", total=1)))
     top = channels[0].embeds[1].to_dict()
-    check.eq("chết lần 50 → màu 染血", top["color"], 0x8A5A2B)
+    check.eq("chết lần 50 → màu 染血", top["color"], 0x9F632E)
     check.ok("title có 染血", "染血" in top["title"], top["title"])
     check.eq("deaths_total = 50", store.config.deaths_total, 50)
 

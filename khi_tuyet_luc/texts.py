@@ -41,7 +41,7 @@ TURNS_VI: tuple[str, ...] = ("Nhất", "Nhị", "Tam", "Tứ", "Ngũ", "Lục", 
 
 
 REALM_STEP = 50
-REALM_MAX = 500  # mốc 無間 — quá mốc này thì đứng yên
+REALM_MAX = 700  # mốc 無間 — quá mốc này thì đứng yên
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,19 +60,24 @@ class Realm:
 
 
 REALMS: tuple[Realm, ...] = (
-    # Dải màu đi từ ngọc bích (sạch) → đồng thau → son → huyết khô → gần đen.
-    # Độ sáng giảm đều mỗi bậc, nên càng chết nhiều embed càng tối.
+    # 15 bậc × 50 mạng → 無間 ở mốc 700. Dải màu đi từ ngọc bích (sạch) → đồng
+    # thau → gạch nung → huyết tươi → huyết khô → gần đen; độ sáng giảm đều mỗi
+    # bậc nên càng chết nhiều embed càng tối (badge.py cũng tối dần theo bậc).
     Realm(0, "未染", "Vô Nhiễm", "tay còn sạch", 0x2E8B6E),
-    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu đã khô", 0x8A5A2B),
-    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước đã chậm", 0x8F4526),
-    Realm(3, "煞氣", "Sát Khí", "quỷ thần tránh xa", 0x8C3422),
-    Realm(4, "血債", "Huyết Trái", "nợ máu chồng nợ máu", 0x87241F),
-    Realm(5, "入魔", "Nhập Ma", "ma khí vào gân cốt", 0x7A1A22),
-    Realm(6, "業障", "Nghiệp Chướng", "nghiệp cũ quấn cổ chân", 0x6B1623),
-    Realm(7, "幽途", "U Đồ", "đường âm chỉ một lối", 0x5C1223),
-    Realm(8, "輪迴", "Luân Hồi", "quên cả tên mình", 0x4E0F20),
-    Realm(9, "修羅", "Tu La", "sát nghiệp không dứt", 0x420C1B),
-    Realm(10, "無間", "Vô Gián", "không còn lối ra", 0x360A15),
+    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu đã khô", 0x9F632E),
+    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước đã chậm", 0xA6562E),
+    Realm(3, "煞氣", "Sát Khí", "quỷ thần tránh xa", 0xA74A2E),
+    Realm(4, "血債", "Huyết Trái", "nợ máu chồng nợ máu", 0xA93F2E),
+    Realm(5, "入魔", "Nhập Ma", "ma khí vào gân cốt", 0xA5342F),
+    Realm(6, "骨寒", "Cốt Hàn", "lạnh buốt tận xương", 0x9A2D30),
+    Realm(7, "業障", "Nghiệp Chướng", "nghiệp cũ quấn cổ chân", 0x862731),
+    Realm(8, "幽途", "U Đồ", "đường âm một lối", 0x72222E),
+    Realm(9, "黃泉", "Hoàng Tuyền", "suối vàng đã gọi", 0x601D2A),
+    Realm(10, "輪迴", "Luân Hồi", "quên cả tên mình", 0x4F1825),
+    Realm(11, "修羅", "Tu La", "sát nghiệp không dứt", 0x421421),
+    Realm(12, "忘川", "Vong Xuyên", "uống nước quên kiếp", 0x35111B),
+    Realm(13, "阿鼻", "A Tỳ", "đọa vào a tỳ", 0x290E17),
+    Realm(14, "無間", "Vô Gián", "không còn lối ra", 0x1E0A11),
 )
 
 STREAK_TITLES = {3: " · 連死", 5: " · 五連", 7: " · 七連"}
@@ -89,7 +94,7 @@ def turn_label(death_no: int | None) -> tuple[str, str]:
 
 
 def realm_for(total_deaths: int | None) -> Realm:
-    """Bậc cảnh giới theo tổng kiếp; quá 500 thì đứng ở 無間."""
+    """Bậc cảnh giới theo tổng kiếp; quá 700 thì đứng ở 無間."""
     total = max(0, int(total_deaths or 0))
     return REALMS[min(total // REALM_STEP, len(REALMS) - 1)]
 

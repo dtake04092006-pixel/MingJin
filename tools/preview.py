@@ -51,7 +51,7 @@ def main() -> int:
     )
     data = embed.to_dict()
     width = 62
-    badge = render_count_png(total, int(data["color"])) or b""
+    badge = render_count_png(total, int(data["color"]), texts.realm_for(total).index) or b""
     corner = f"[ số ở góc phải: {total} · ảnh {len(badge)} byte ]"
 
     print("\n┌" + "─" * (width + 2) + "┐")

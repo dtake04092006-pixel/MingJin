@@ -175,9 +175,9 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 Nguyên tắc thị giác:
 
 - Trang trí tối thiểu: đúng **hai** nhãn emoji — `🩸` cho câu thơ, `⚡` cho dòng liên tử. Không kẻ khung trên/dưới, không lặp ký tự thành dãy dài (dãy `乂` cũ gây rối mắt). Phần còn lại là Hán tự (`氣絕錄`, `血`, `命`, `境`, `連`, `◈`).
-- **Con số lớn ở góc phải (thumbnail)**: số tổng kiếp vẽ thành PNG trong suốt (`badge.py`), màu lấy đúng màu thanh của embed nên luôn trùng theme cảnh giới; vòng tròn mảnh cùng tông bao quanh. Bậc càng tối thì số được nâng sáng vừa đủ (giữ sắc, không pha trắng thành xám) để vẫn đọc được trên nền Discord tối. Thiếu Pillow → bỏ ảnh, embed vẫn gửi.
+- **Con số lớn ở góc phải (thumbnail)**: số tổng kiếp vẽ thành PNG trong suốt (`badge.py`) — một **vết máu bắn** cùng tông màu thanh embed, con số **khoét rỗng** giữa vết máu kèm viền sáng men theo mép khoét. Vết máu nham nhở dần theo bậc: thêm tia bắn, thêm giọt văng, thêm vệt rỉ chảy dài, và từ giữa đường có vết cào xé; alpha giảm dần nên bậc cao chìm vào nền Discord tối. Màu vết máu là màu cảnh giới được nâng sàn độ sáng (giữ sắc, không pha trắng thành xám). Thiếu Pillow → bỏ ảnh, embed vẫn gửi.
 - Chữ phải **ngắn nhưng đắt**: câu thơ một dòng ≤ 52 ký tự, câu liên tử ≤ 40, trạng thái bậc ≤ 26, footer một dòng. Test chặn nếu ai viết dài lại.
-- Bảng màu theo cảnh giới (mỗi 50 mạng đổi một bậc, xem §12): ngọc bích `#2E8B6E` (未染) → đồng thau → son → huyết khô → gần đen `#360A15` (無間). Độ sáng giảm đều từng bậc nên **càng chết nhiều, thanh màu càng tối**; có test kiểm tra điều này.
+- Bảng màu theo cảnh giới (15 bậc, mỗi bậc 50 mạng, dừng ở 700 — xem §12): ngọc bích `#2E8B6E` (未染) → đồng thau → gạch nung → huyết tươi → huyết khô → gần đen `#1E0A11` (無間). Độ sáng giảm đều từng bậc nên **càng chết nhiều, thanh màu càng tối**; có test kiểm tra điều này.
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
 - Liên tử (chết trong vòng 90 s so với lần trước) → thêm dòng "ma khí nhập thể" và tiêu đề đổi hậu tố.
 - **Lưới field 3×2 thẳng hàng**: đúng 6 field, tất cả `inline=True` và **giá trị chỉ một dòng**. Tên field đều hai chữ (`血 · Tử kỳ`, `命 · Tổng kiếp`, `時 · Cách kiếp`, `境 · Cảnh giới`, `連 · Liên tử`, `◈ Phiên`) để ba cột rộng bằng nhau.
@@ -190,9 +190,9 @@ Mô phỏng bố cục:
 ```
 [ ảnh 1920x1080 — khung hình ngay TRƯỚC khi chữ DEAD hiện ]
 ┌───────────────────────────────────────────────┐
-│ Khí Tuyệt Lục                            ╭────╮ │  ← author + số đếm
-│ 氣絕錄 · Tứ Chuyển · Nhập Ma             │ 47 │ │  ← title
-│ 🩸 Ma khí quấn thân, huyết vụ tàn như    ╰────╯ │  ← description
+│ Khí Tuyệt Lục                        ╲ 47 ╱  │  ← author + vết máu (số khoét rỗng)
+│ 氣絕錄 · Tứ Chuyển · Nhập Ma          ╱    ╲  │  ← title
+│ 🩸 Ma khí quấn thân, huyết vụ tàn như         │  ← description
 │ khói nhang.                                   │
 │ ⚡ Ma khí chưa tản, ngươi đã quay lại.        │  ← chỉ khi liên tử
 │ *ma khí vào gân cốt*                          │  ← trạng thái bậc, in nghiêng
@@ -230,7 +230,7 @@ bot code/bot/
 │  ├─ settings.py           # đọc env, validate
 │  ├─ texts.py              # kho câu thơ ngắn, Hán tự, bậc chuyển, bảng màu
 │  ├─ event.py              # parse payload tracker + decode ảnh
-│  ├─ badge.py              # vẽ PNG số tổng kiếp (thumbnail góc phải, màu theo bậc)
+│  ├─ badge.py              # vẽ PNG số tổng kiếp: vết máu khoét số, nham nhở dần theo bậc
 │  ├─ embed.py              # dựng embed kiếm hiệp
 │  ├─ store.py              # cấu hình: cache + message ghim Discord + env (neo linh hoạt)
 │  ├─ notify.py             # gửi tới nhiều kênh, đính kèm số đếm + ảnh, dựng payload xem trước
@@ -263,7 +263,7 @@ bot code/bot/
 
 | Test | Nội dung |
 |---|---|
-| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; chữ phải ngắn (câu thơ ≤ 52 ký tự, một dòng); ảnh số đếm là PNG, đổi màu theo bậc, bậc cuối vẫn sáng hơn màu thanh; kèm lưu/đọc cấu hình |
+| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; chữ phải ngắn (câu thơ ≤ 52 ký tự, một dòng); 15 bậc cảnh giới đúng mốc (700 = 無間, không có bậc kế); ảnh số đếm là PNG, đổi màu theo bậc, cùng số mà bậc cao hơn thì vết máu nham nhở hơn, bậc cuối vẫn sáng hơn màu thanh; kèm lưu/đọc cấu hình |
 | `tools/test_notify.py` | Nhiều kênh, bật/tắt ảnh chụp (ảnh số đếm luôn đi kèm), thứ tự attachment + `thumbnail = attachment://ktl-count.png`, chống trùng `id`, liên tử, lỗi quyền, avatar người chơi, và `build_preview()` (đúng embed, không gửi gì, không đổi số liệu) |
 | `tools/test_store.py` | Neo cấu hình: ghim vào kênh thông báo, không tạo kênh riêng, không sinh message trùng, khôi phục sau khi mất cache (quét pin), kênh tên cũ vẫn đọc được |
 | `tools/test_webhook.py` | aiohttp TestClient: token sai → 403; thiếu `id` → 400; chưa có kênh → 503; hợp lệ → 200 và ảnh base64 được decode đúng kích thước; body quá lớn → 413 |
@@ -313,28 +313,35 @@ tổng kiếp = cfg.deaths_total          # admin đặt bằng /ktl deaths
 - Không dùng `event.total_deaths` của tracker để tính cảnh giới (tracker reset DB là về 0);
   con số đó vẫn hiện ở field `命 · Tổng kiếp` nếu bot chưa có số của mình.
 
-### 12.2 Thang cảnh giới — 50 mạng một bậc, dừng ở 500
+### 12.2 Thang cảnh giới — 15 bậc, mỗi bậc 50 mạng, dừng ở 700
 
 | Tổng kiếp | Hán | Việt | Trạng thái | Màu |
 |---|---|---|---|---|
-| 0–49 | 未染 | Vô Nhiễm | chưa vấy máu, tay còn sạch | `#2E8B6E` |
-| 50–99 | 染血 | Nhiễm Huyết | vết máu đầu tiên đã khô trên áo | `#8A5A2B` |
-| 100–149 | 傷痕 | Thương Ngân | thân đầy sẹo, bước chân đã chậm | `#8F4526` |
-| 150–199 | 煞氣 | Sát Khí | sát khí bốc lên, quỷ thần tránh xa | `#8C3422` |
-| 200–249 | 血債 | Huyết Trái | nợ máu chồng lên nợ máu | `#87241F` |
-| 250–299 | 入魔 | Nhập Ma | ma khí đã vào gân cốt | `#7A1A22` |
-| 300–349 | 業障 | Nghiệp Chướng | nghiệp cũ quấn lấy cổ chân | `#6B1623` |
-| 350–399 | 幽途 | U Đồ | đường âm đã mở, chỉ một lối | `#5C1223` |
-| 400–449 | 輪迴 | Luân Hồi | chết rồi sống lại, quên cả tên mình | `#4E0F20` |
-| 450–499 | 修羅 | Tu La | sa vào tu la đạo, sát nghiệp không dứt | `#420C1B` |
-| 500+ | 無間 | Vô Gián | vô gián địa ngục, không còn lối ra | `#360A15` |
+| 0–49 | 未染 | Vô Nhiễm | tay còn sạch | `#2E8B6E` |
+| 50–99 | 染血 | Nhiễm Huyết | vết máu đầu đã khô | `#9F632E` |
+| 100–149 | 傷痕 | Thương Ngân | thân đầy sẹo, bước đã chậm | `#A6562E` |
+| 150–199 | 煞氣 | Sát Khí | quỷ thần tránh xa | `#A74A2E` |
+| 200–249 | 血債 | Huyết Trái | nợ máu chồng nợ máu | `#A93F2E` |
+| 250–299 | 入魔 | Nhập Ma | ma khí vào gân cốt | `#A5342F` |
+| 300–349 | 骨寒 | Cốt Hàn | lạnh buốt tận xương | `#9A2D30` |
+| 350–399 | 業障 | Nghiệp Chướng | nghiệp cũ quấn cổ chân | `#862731` |
+| 400–449 | 幽途 | U Đồ | đường âm một lối | `#72222E` |
+| 450–499 | 黃泉 | Hoàng Tuyền | suối vàng đã gọi | `#601D2A` |
+| 500–549 | 輪迴 | Luân Hồi | quên cả tên mình | `#4F1825` |
+| 550–599 | 修羅 | Tu La | sát nghiệp không dứt | `#421421` |
+| 600–649 | 忘川 | Vong Xuyên | uống nước quên kiếp | `#35111B` |
+| 650–699 | 阿鼻 | A Tỳ | đọa vào a tỳ | `#290E17` |
+| 700+ | 無間 | Vô Gián | không còn lối ra | `#1E0A11` |
 
 Màu embed = màu cảnh giới (đây là thứ duy nhất đổi theo tổng kiếp). Dải màu đi từ ngọc bích
-sạch sẽ → đồng thau → son → huyết khô → gần đen; độ sáng giảm đều từng bậc nên **càng chết
-nhiều thanh màu càng tối** (test `màu tối dần theo bậc` chặn ai chỉnh sai thứ tự).
+sạch sẽ → đồng thau → gạch nung → huyết tươi → huyết khô → gần đen; độ sáng giảm đều từng bậc
+nên **càng chết nhiều thanh màu càng tối** (test `màu tối dần theo bậc` chặn ai chỉnh sai thứ tự).
+Ảnh số đếm ở góc embed dùng cùng màu đó và **nham nhở dần theo bậc** (`badge.py`): bậc càng cao
+thì vết máu càng nhiều tia bắn, nhiều vệt rỉ, có vết cào xé, và chìm tối dần.
 Chết liên tiếp ≥5 lần vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
 
-Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới (`氣絕錄 · 第三 · Tam Chuyển · 無間`),
+Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới (`氣絕錄 · 第五 · Ngũ Chuyển · 入魔`; quá 10
+lần chết thì thành `氣絕錄 · 12 Chuyển · 黃泉`),
 field `境 · Cảnh giới` chỉ ghi nhãn bậc `未染 · Vô Nhiễm`; câu trạng thái của bậc nằm ở mô tả,
 in nghiêng (không kèm tiến độ tới bậc kế — chỉ `/ktl deaths` và `/ktl status` mới nhắc "còn N mạng").
 

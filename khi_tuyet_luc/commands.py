@@ -439,7 +439,7 @@ def build_group() -> app_commands.Group:
             ),
             inline=False,
         )
-        embed.set_footer(text="Cảnh giới đổi mỗi 50 mạng, tối đa 500 (無間)")
+        embed.set_footer(text="Cảnh giới: 15 bậc, mỗi bậc 50 mạng, tối đa 700 (無間)")
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     return group

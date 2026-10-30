@@ -183,6 +183,7 @@ Nguyên tắc thị giác:
 - **Lưới field 3×2 thẳng hàng**: đúng 6 field, tất cả `inline=True` và **giá trị chỉ một dòng**. Tên field đều hai chữ (`血 · Tử kỳ`, `命 · Tổng kiếp`, `時 · Cách kiếp`, `境 · Cảnh giới`, `連 · Liên tử`, `◈ Phiên`) để ba cột rộng bằng nhau.
 - Field `境 · Cảnh giới` chỉ ghi nhãn bậc (`未染 · Vô Nhiễm`) — **không** hiện tiến độ kiểu `40/50 · còn 10 mạng → 染血`. Câu trạng thái của bậc chuyển xuống mô tả, in nghiêng.
 - Field `◈ Phiên` chỉ hiện thời lượng phiên (`15:02`), không nhét id phiên thô.
+- **Tiêu đề**: `氣絕錄 · <Chuyển thứ mấy> · <cảnh giới>`. "Chuyển" đếm theo **tổng kiếp của bot**, không theo tử kỳ của phiên tracker — nên khởi động lại tracker không kéo nó về 1; chỉ `/ktl deaths` mới đặt lại được. Số được đánh vần bằng Hán tự + âm Việt tới 9999 (`第四十七 · Tứ Thập Thất`), quá mốc đó mới ghi số Ả Rập. Field `血 · Tử kỳ` vẫn là số của tracker (theo phiên) để đối chiếu.
 - Bản thử (`/ktl test`, `/ktl preview`) trông **y hệt** bản thật: không có chữ "thử"/"test" ở footer hay phiên.
 
 Mô phỏng bố cục:
@@ -191,7 +192,7 @@ Mô phỏng bố cục:
 [ ảnh 1920x1080 — khung hình ngay TRƯỚC khi chữ DEAD hiện ]
 ┌───────────────────────────────────────────────┐
 │ Khí Tuyệt Lục                        ╲ 47 ╱  │  ← author + vết máu (số khoét rỗng)
-│ 氣絕錄 · Tứ Chuyển · Nhập Ma          ╱    ╲  │  ← title
+│ 氣絕錄 · 第四十七 · Tứ Thập Thất Chuyển · 未染 │  ← title (Chuyển theo tổng kiếp)
 │ 🩸 Ma khí quấn thân, huyết vụ tàn như         │  ← description
 │ khói nhang.                                   │
 │ ⚡ Ma khí chưa tản, ngươi đã quay lại.        │  ← chỉ khi liên tử
@@ -340,8 +341,8 @@ nên **càng chết nhiều thanh màu càng tối** (test `màu tối dần the
 thì vết máu càng nhiều tia bắn, nhiều vệt rỉ, có vết cào xé, và chìm tối dần.
 Chết liên tiếp ≥5 lần vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
 
-Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới (`氣絕錄 · 第五 · Ngũ Chuyển · 入魔`; quá 10
-lần chết thì thành `氣絕錄 · 12 Chuyển · 黃泉`),
+Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới, và "Chuyển thứ mấy" lấy theo **tổng kiếp**
+(`氣絕錄 · 第二百四十 · Nhị Bách Tứ Thập Chuyển · 黃泉`; đánh vần tới 9999, quá mốc đó ghi số),
 field `境 · Cảnh giới` chỉ ghi nhãn bậc `未染 · Vô Nhiễm`; câu trạng thái của bậc nằm ở mô tả,
 in nghiêng (không kèm tiến độ tới bậc kế — chỉ `/ktl deaths` và `/ktl status` mới nhắc "còn N mạng").
 

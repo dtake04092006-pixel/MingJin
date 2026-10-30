@@ -127,7 +127,10 @@ def build_group() -> app_commands.Group:
             embed=_panel("氣絕錄 · đã sẵn sàng", "\n".join(lines), COLOUR_OK), ephemeral=True
         )
 
-    @group.command(name="deaths", description="Đặt tổng kiếp đã có từ trước (cảnh giới tính theo số này)")
+    @group.command(
+        name="deaths",
+        description="Đặt tổng kiếp đã có từ trước — cảnh giới và 'Chuyển' tính lại theo số này",
+    )
     @app_commands.describe(count="Tổng số lần chết tính từ đầu, ví dụ 39")
     async def deaths_cmd(interaction: discord.Interaction, count: app_commands.Range[int, 0, 100000]) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
@@ -141,9 +144,13 @@ def build_group() -> app_commands.Group:
             tail = "đã ở bậc cuối, không còn bậc nào tệ hơn"
         else:
             tail = f"còn {nxt.index * texts.REALM_STEP - total} mạng → {nxt.cn}"
+        # "Chuyển" bám tổng kiếp của bot, nên đây là chỗ duy nhất đặt lại được nó.
+        han, vi = texts.turn_label(total + 1)
+        turn = f"{han} · {vi} Chuyển" if han else (f"{vi} Chuyển" if vi else "—")
         body = (
             f"▸ Tổng kiếp: **#{total}**\n"
             f"▸ Cảnh giới: **{realm.label}** — {realm.status}\n"
+            f"▸ Lần chết kế: **{turn}**\n"
             f"▸ {tail}"
         )
         await interaction.followup.send(embed=_panel("命 · Tổng kiếp", body, COLOUR_OK), ephemeral=True)

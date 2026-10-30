@@ -63,8 +63,13 @@ def validate_embed(embed: discord.Embed) -> None:
         raise ValueError("embed vượt giới hạn Discord: " + ", ".join(problems))
 
 
-def _title(event: DeathEvent, streak: int, realm: texts.Realm) -> str:
-    cn, vi = texts.turn_label(event.death_no)
+def _title(event: DeathEvent, streak: int, realm: texts.Realm, total: int) -> str:
+    """Chuyển thứ mấy tính theo tổng kiếp của bot, không theo phiên tracker.
+
+    Nhờ vậy khởi động lại tracker không kéo con số về 1; chỉ `/ktl deaths` mới
+    đặt lại được. Thiếu số liệu thì mới rơi về tử kỳ của event.
+    """
+    cn, vi = texts.turn_label(total or event.death_no)
     if cn:
         turn = f"{cn} · {vi} Chuyển"
     elif vi:
@@ -122,7 +127,7 @@ def build_embed(
     colour = STREAK_COLOUR_OVERRIDE if streak >= STREAK_COLOUR_THRESHOLD else realm.colour
 
     embed = discord.Embed(
-        title=_title(event, streak, realm),
+        title=_title(event, streak, realm, total),
         description=_description(verse, streak_line, realm),
         colour=discord.Colour(colour),
         timestamp=event.ts_utc,

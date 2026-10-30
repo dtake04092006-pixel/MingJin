@@ -36,8 +36,10 @@ STREAK_VERSES: tuple[str, ...] = (
     "Tâm ma dẫn lối, lao vào lưỡi đao.",
 )
 
-TURNS_CN: tuple[str, ...] = ("第一", "第二", "第三", "第四", "第五", "第六", "第七", "第八", "第九", "第十")
-TURNS_VI: tuple[str, ...] = ("Nhất", "Nhị", "Tam", "Tứ", "Ngũ", "Lục", "Thất", "Bát", "Cửu", "Thập")
+HAN_DIGITS: tuple[str, ...] = ("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九")
+VI_DIGITS: tuple[str, ...] = ("Không", "Nhất", "Nhị", "Tam", "Tứ", "Ngũ", "Lục", "Thất", "Bát", "Cửu")
+HAN_UNITS = ((1000, "千", "Thiên"), (100, "百", "Bách"), (10, "十", "Thập"))
+TURN_MAX = 9999  # quá mốc này thì thôi đánh vần, chỉ ghi số
 
 
 REALM_STEP = 50
@@ -83,14 +85,43 @@ REALMS: tuple[Realm, ...] = (
 STREAK_TITLES = {3: " · 連死", 5: " · 五連", 7: " · 七連"}
 
 
-def turn_label(death_no: int | None) -> tuple[str, str]:
-    """(Hán tự, âm Việt) cho lần chết thứ n. n>10 thì chỉ trả về số."""
-    if not death_no or death_no < 1:
+def _spell(number: int) -> tuple[str, str]:
+    """Đánh vần số 1..9999: 47 → (四十七, Tứ Thập Thất), 105 → (一百零五, Nhất Bách Linh Ngũ)."""
+    han: list[str] = []
+    vi: list[str] = []
+    rest = number
+    gap = False  # có chỗ trống giữa hai hàng → phải chèn 零/Linh
+    for unit, han_unit, vi_unit in HAN_UNITS:
+        if rest < unit:
+            continue
+        digit, rest = divmod(rest, unit)
+        if gap:
+            han.append("零")
+            vi.append("Linh")
+            gap = False
+        if not (unit == 10 and digit == 1 and not han):  # 10 = 十, không phải 一十
+            han.append(HAN_DIGITS[digit])
+            vi.append(VI_DIGITS[digit])
+        han.append(han_unit)
+        vi.append(vi_unit)
+        gap = 0 < rest < unit // 10
+    if rest:
+        if gap:
+            han.append("零")
+            vi.append("Linh")
+        han.append(HAN_DIGITS[rest])
+        vi.append(VI_DIGITS[rest])
+    return "".join(han), " ".join(vi)
+
+
+def turn_label(number: int | None) -> tuple[str, str]:
+    """(Hán tự, âm Việt) cho lần thứ n: 3 → (第三, Tam), 47 → (第四十七, Tứ Thập Thất)."""
+    if not number or number < 1:
         return "", ""
-    if death_no > 10:
-        return "", str(death_no)
-    index = death_no - 1
-    return TURNS_CN[index], TURNS_VI[index]
+    if number > TURN_MAX:
+        return "", str(number)
+    han, vi = _spell(int(number))
+    return f"第{han}", vi
 
 
 def realm_for(total_deaths: int | None) -> Realm:

@@ -140,6 +140,22 @@ def main() -> int:
     check.eq("chết lần 50 → màu 染血", top["color"], 0x9F632E)
     check.ok("title có 染血", "染血" in top["title"], top["title"])
     check.eq("deaths_total = 50", store.config.deaths_total, 50)
+    # "Chuyển" bám tổng kiếp của bot: restart tracker không kéo về 1,
+    # nhưng /ktl deaths vẫn đặt lại được (đây là cách duy nhất để reset).
+    store.set_deaths(500)
+    asyncio.run(notifier.dispatch(make_event(event_id="r3", total=1)))
+    check.ok(
+        "đặt 500 → chết kế tiếp là 第五百零一",
+        "第五百零一 · Ngũ Bách Linh Nhất Chuyển" in channels[0].embeds[2].to_dict()["title"],
+        channels[0].embeds[2].to_dict()["title"],
+    )
+    store.set_deaths(39)
+    asyncio.run(notifier.dispatch(make_event(event_id="r4", total=1)))
+    check.ok(
+        "đặt lại 39 → title 第四十",
+        "第四十 · Tứ Thập Chuyển" in channels[0].embeds[3].to_dict()["title"],
+        channels[0].embeds[3].to_dict()["title"],
+    )
 
     # 12. người chơi hiện ở author: ảnh tươi từ cache, fallback ảnh đã lưu
     bot, store, channels, notifier = build([(5050, None)])

@@ -110,6 +110,11 @@ chọn repo → Apply. Sau đó vào service → Environment → điền 3 bí m
 | Instance Type | **Free** |
 | Health Check Path | `/health` |
 
+> Start Command **phải** đúng `python -m khi_tuyet_luc`. Nếu service được tạo từ
+> trước đợt đổi tên và vẫn ghi `python -m menh_tan`, bot vẫn chạy được nhờ cầu
+> nối `menh_tan/__main__.py`, nhưng nên sửa lại lệnh cho gọn: Settings →
+> Build & Deploy → Start Command → **Save Changes** → Manual Deploy.
+
 ### 4.3 Biến môi trường (tab Environment)
 
 | Key | Value |
@@ -124,7 +129,7 @@ Bấm **Save Changes** → Render tự deploy. Chờ log:
 
 ```
 INFO  khi_tuyet_luc.web: HTTP nghe trên 0.0.0.0:10000
-INFO  khi_tuyet_luc.bot: đăng ký 10 slash command vào guild ...
+INFO  khi_tuyet_luc.bot: đăng ký 12 slash command vào guild ...
 INFO  khi_tuyet_luc.bot: đã đăng nhập: Khí Tuyệt Lục#xxxx (guild: 1)
 WARNING khi_tuyet_luc.bot: chưa cấu hình kênh nào — chạy /ktl add trong server
 ```

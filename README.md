@@ -129,7 +129,7 @@ Bấm **Save Changes** → Render tự deploy. Chờ log:
 
 ```
 INFO  khi_tuyet_luc.web: HTTP nghe trên 0.0.0.0:10000
-INFO  khi_tuyet_luc.bot: đăng ký 12 slash command vào guild ...
+INFO  khi_tuyet_luc.bot: đăng ký 13 slash command vào guild ...
 INFO  khi_tuyet_luc.bot: đã đăng nhập: Khí Tuyệt Lục#xxxx (guild: 1)
 WARNING khi_tuyet_luc.bot: chưa cấu hình kênh nào — chạy /ktl add trong server
 ```
@@ -172,6 +172,7 @@ Gõ trong server (cần quyền Quản lý máy chủ):
 /ktl remove channel:#nhật-ký
 /ktl pause                 ← tạm ngưng (tracker vẫn gửi được, bot bỏ qua)
 /ktl resume
+/ktl help                  ← bảng tóm tắt mọi lệnh (trả lời riêng tư)
 ```
 
 `/ktl setup` rất quan trọng: nó tạo message ghim giữ cấu hình. Đừng xoá kênh
@@ -222,7 +223,7 @@ khi_tuyet_luc/
   store.py      cấu hình: cache + message ghim Discord + env
   notify.py     gửi tới nhiều kênh, chế độ ảnh, chống trùng id, tính liên tử
   web.py        aiohttp: /health, /, /api/deaths
-  commands.py   12 lệnh slash
+  commands.py   13 lệnh slash
   bot.py        lớp Bot, đồng bộ slash command, flush cấu hình định kỳ
 tools/
   _common.py, test_embed.py, test_notify.py, test_webhook.py

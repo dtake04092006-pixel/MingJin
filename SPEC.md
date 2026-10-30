@@ -155,6 +155,7 @@ Thứ tự đọc khi khởi động:
 | `/ktl status` | — | cấu hình hiện tại + cảnh giới + người chơi + số event đã nhận |
 | `/ktl pause` | — | tạm ngưng thông báo (tracker vẫn được nhận) |
 | `/ktl resume` | — | chạy tiếp |
+| `/ktl help` | — | bảng tóm tắt mọi lệnh, gửi riêng tư |
 
 Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 
@@ -218,7 +219,7 @@ bot code/bot/
 │  ├─ store.py              # cấu hình: cache + message ghim Discord + env
 │  ├─ notify.py             # gửi tới nhiều kênh, chế độ ảnh
 │  ├─ web.py                # aiohttp: /health, /, /api/deaths
-│  └─ commands.py           # 12 lệnh slash
+│  └─ commands.py           # 13 lệnh slash
 └─ tools/
    ├─ test_embed.py         # test thuần offline: giới hạn embed, nội dung
    └─ test_webhook.py       # test handler bằng aiohttp TestClient (không cần token)

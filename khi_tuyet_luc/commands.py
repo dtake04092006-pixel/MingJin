@@ -261,6 +261,47 @@ def build_group() -> app_commands.Group:
         await store.save()
         await interaction.followup.send("Đã chạy tiếp.", ephemeral=True)
 
+    @group.command(name="help", description="Xem toàn bộ lệnh và cách dùng nhanh")
+    async def help_cmd(interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        embed = discord.Embed(
+            title="氣絕錄 · Khí Tuyệt Lục",
+            description="Bot báo tử vong từ PBZ Death Tracker. Nhóm `/ktl` chỉ admin dùng được.",
+            colour=0x7A6440,
+        )
+        embed.add_field(
+            name="▸ Lần đầu cài",
+            value=(
+                "`/ktl setup` — tạo kênh cấu hình riêng tư, ghim cấu hình, gán bạn là người chơi\n"
+                "`/ktl deaths count:39` — nhập số lần chết đã có từ trước khi dùng tool\n"
+                "`/ktl add channel:#kênh` — thêm kênh nhận thông báo\n"
+                "`/ktl player member:@ai` — đổi người chơi (bỏ trống = xoá)"
+            ),
+            inline=False,
+        )
+        embed.add_field(
+            name="▸ Kênh & ảnh",
+            value=(
+                "`/ktl list` — xem kênh đang nhận thông báo\n"
+                "`/ktl remove channel:#kênh` — bỏ kênh khỏi danh sách\n"
+                "`/ktl image channel:#kênh mode:…` — ép chế độ ảnh cho một kênh\n"
+                "`/ktl default-image mode:…` — chế độ ảnh mặc định mọi kênh"
+            ),
+            inline=False,
+        )
+        embed.add_field(
+            name="▸ Vận hành",
+            value=(
+                "`/ktl test` — gửi thông báo mẫu để xem embed\n"
+                "`/ktl status` — trạng thái bot, cảnh giới, thống kê\n"
+                "`/ktl pause` · `/ktl resume` — tạm ngưng / chạy tiếp\n"
+                "`/ktl help` — bảng này"
+            ),
+            inline=False,
+        )
+        embed.set_footer(text="Cảnh giới đổi mỗi 50 mạng, tối đa 500 (無間)")
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
     return group
 
 

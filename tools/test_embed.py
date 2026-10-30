@@ -252,9 +252,21 @@ def main() -> int:
     check.ok("có lớp cột chữ", column is not None)
     box = column.getbbox() if column is not None else None
     check.ok(
-        "cột nằm ở mép phải, phía trên",
-        box is not None and box[0] > badge_art.SIZE * 0.75 and box[3] < badge_art.SIZE * 0.45,
+        "cột nằm sát mép phải, chạy xuống nửa dưới",
+        box is not None and box[0] > badge_art.SIZE * 0.8 and box[1] > badge_art.SIZE * 0.4
+        and box[3] > badge_art.SIZE * 0.8,
         str(box),
+    )
+    digits = badge_art._digits_layer("401", badge_art.BOX_LONG, 8, (255, 255, 255, 255), (255, 255, 255, 255))
+    check.ok(
+        "cột không chạm chữ số 401",
+        box is not None and digits.split()[3].getbbox()[2] < box[0],
+        f"{digits.split()[3].getbbox()} vs {box}",
+    )
+    check.ok(
+        "cột sáng hơn vết máu (vẽ đè lên máu)",
+        badge_art.COLUMN_LIGHT > badge_art.LIGHT_FLOOR,
+        f"{badge_art.COLUMN_LIGHT} > {badge_art.LIGHT_FLOOR}",
     )
     check.ok("không có chữ → không cột", badge_art._column_layer("", 0x9F632E, 1) is None)
     check.ok("chữ không có mặt nạ → không cột", badge_art._column_layer("A", 0x9F632E, 1) is None)

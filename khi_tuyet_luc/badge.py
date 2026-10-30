@@ -44,12 +44,13 @@ GLYPH_SCALE = 0.74
 BLOOD_CX, BLOOD_CY = 0.67, 0.68
 BLOOD_R = 0.30
 BOX_SHORT, BOX_LONG = 144, 162  # khung chữ số (≤2 chữ số / 3–4 chữ số): to như bản cũ
-COLUMN_CX = 0.89               # cột chữ dọc nằm sát mép phải
-COLUMN_TOP, COLUMN_BOTTOM = 0.03, 0.40
-COLUMN_WIDTH = 0.17            # bề rộng tối đa một chữ trong cột
+COLUMN_CX = 0.925              # cột chữ dọc sát mép phải, ngang tầm con số
+COLUMN_TOP, COLUMN_BOTTOM = 0.46, 0.97
+COLUMN_WIDTH = 0.128           # bề rộng tối đa một chữ trong cột
 COLUMN_GAP = 0.008
-COLUMN_LIGHT = 0.33            # cột chữ chìm hơn chữ lớn một nấc
-COLUMN_STEP = 0.010
+COLUMN_LIGHT = 0.70            # cột chữ vẽ đè lên vết máu → phải sáng mới thấy
+COLUMN_STEP = 0.006
+COLUMN_ALPHA = 205
 
 
 def _hls(colour: int, lightness: float) -> tuple[int, int, int]:
@@ -102,7 +103,7 @@ def _watermark(glyph: str, colour: int, level: int):
 
 
 def _column_layer(text: str, colour: int, level: int):
-    """Cột chữ Hán dọc mép phải (số kiếp đánh vần), chìm hơn chữ lớn một nấc.
+    """Cột chữ Hán dọc mép phải (số kiếp đánh vần), vẽ đè lên vết máu nên phải sáng.
 
     Chữ dài (vài nghìn) tự thu nhỏ cho vừa cột; chữ nào thiếu mặt nạ thì bỏ qua.
     """
@@ -114,7 +115,9 @@ def _column_layer(text: str, colour: int, level: int):
     side = int(min(SIZE * COLUMN_WIDTH, room / len(masks)))
     if side < 10:  # quá nhiều chữ → thà bỏ cột còn hơn ra vệt nhòe
         return None
-    tint = Image.new("RGBA", (side, side), (*_dim(colour, COLUMN_LIGHT - level * COLUMN_STEP), 210))
+    tint = Image.new(
+        "RGBA", (side, side), (*_hls(colour, COLUMN_LIGHT - level * COLUMN_STEP), COLUMN_ALPHA)
+    )
     layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     x = int(SIZE * COLUMN_CX - side / 2)
     y = SIZE * COLUMN_TOP + (room - side * len(masks)) / 2
@@ -257,10 +260,6 @@ def render_count_png(total: int, colour: int, level: int = 0, glyph: str = "") -
     mark = _watermark(glyph, colour, level)
     if mark is not None:  # ký tự lớn nằm dưới cùng, vết máu đóng dấu lên trên
         image.alpha_composite(mark)
-    han = texts.turn_label(total)[0]
-    column = _column_layer(han[1:] if han.startswith("第") else han, colour, level)
-    if column is not None:  # cột chữ số dọc mép phải, cũng nằm dưới vết máu
-        image.alpha_composite(column)
     # Bậc càng cao thì vết máu càng chìm vào nền (alpha giảm) — vẫn thấy nhưng tối hơn.
     alpha = 236 - level * 4
     image.paste(Image.new("RGBA", (SIZE, SIZE), (*blood, alpha)), (0, 0), mask)
@@ -284,6 +283,13 @@ def render_count_png(total: int, colour: int, level: int = 0, glyph: str = "") -
     # Viền sáng men theo mép khoét: số vẫn đọc được dù vết máu đã sẫm gần đen.
     rim = _digits_layer(text, box, stroke=4, fill=None, stroke_fill=(*_hls(colour, 0.72), 135))
     image.alpha_composite(rim)
+
+    # Cột chữ số dọc mép phải: nằm cạnh con số rồi chạy xuống đáy, vẽ sau cùng để
+    # không bị vết máu và vòng khoét nuốt mất.
+    han = texts.turn_label(total)[0]
+    column = _column_layer(han[1:] if han.startswith("第") else han, colour, level)
+    if column is not None:
+        image.alpha_composite(column)
 
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=True)

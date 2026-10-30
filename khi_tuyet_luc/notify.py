@@ -151,7 +151,12 @@ class Notifier:
         # vết máu trong ảnh càng nham nhở (xem badge.py).
         total = int(lifetime if lifetime is not None else (event.total_deaths or 0))
         realm = texts.realm_for(total)
-        png = render_count_png(total, embed.colour.value if embed.colour else realm.colour, realm.index)
+        png = render_count_png(
+            total,
+            embed.colour.value if embed.colour else realm.colour,
+            realm.index,
+            realm.glyph,
+        )
         if png is not None:
             files.append(discord.File(io.BytesIO(png), filename=COUNTER_FILENAME))
             embed.set_thumbnail(url=f"attachment://{COUNTER_FILENAME}")

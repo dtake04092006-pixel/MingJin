@@ -51,8 +51,9 @@ def main() -> int:
     )
     data = embed.to_dict()
     width = 62
-    badge = render_count_png(total, int(data["color"]), texts.realm_for(total).index) or b""
-    corner = f"[ số ở góc phải: {total} · ảnh {len(badge)} byte ]"
+    realm = texts.realm_for(total)
+    badge = render_count_png(total, int(data["color"]), realm.index, realm.glyph) or b""
+    corner = f"[ số ở góc phải: {total} {realm.glyph} · ảnh {len(badge)} byte ]"
 
     print("\n┌" + "─" * (width + 2) + "┐")
     print("│ [ ảnh chụp khoảnh khắc TRƯỚC khi chết — attachment ]".ljust(width + 3) + "│")

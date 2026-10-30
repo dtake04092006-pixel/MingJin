@@ -214,12 +214,12 @@ outbox** để gửi lại sau.
 
 | Lệnh | Nội dung |
 |---|---|
-| `python tools\test_embed.py` | 101 kiểm tra: embed, giới hạn Discord, độ dài câu chữ, cảnh giới, số Hán tự của "Chuyển", ảnh số đếm, lưu cấu hình |
+| `python tools\test_embed.py` | 109 kiểm tra: embed, giới hạn Discord, độ dài câu chữ, cảnh giới, số Hán tự của "Chuyển", ảnh số đếm + ký tự lớn theo bậc, lưu cấu hình |
 | `python tools\test_notify.py` | 57 kiểm tra: nhiều kênh, ảnh số đếm + ảnh chụp, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
 | `python tools\test_store.py` | 17 kiểm tra: neo cấu hình vào kênh thông báo, không tạo kênh riêng, khôi phục sau khi mất cache |
 | `python tools\test_webhook.py` | 33 kiểm tra: token, JSON hỏng, base64, 503/400/403 |
 
-Tổng cộng 208 kiểm tra, chạy hết vài giây, không cần token Discord.
+Tổng cộng 216 kiểm tra, chạy hết vài giây, không cần token Discord.
 
 ---
 
@@ -231,7 +231,8 @@ khi_tuyet_luc/
   settings.py   đọc env / .env, kiểm tra bắt buộc
   texts.py      câu thơ ngắn, Hán tự, bậc "chuyển", bảng màu theo cảnh giới
   event.py      parse payload tracker, giải mã ảnh base64 (≤ 8 MB, JPEG/PNG)
-  badge.py      vẽ PNG số tổng kiếp — vết máu khoét số ở góc phải embed, càng lên bậc càng nham nhở
+  badge.py      vẽ PNG số tổng kiếp — ký tự bậc chìm + vết máu khoét số ở góc phải, càng lên bậc càng tối và nham nhở
+  glyphs/       15 mặt nạ trắng chữ Hán (tên = mã Unicode) để server không cần font CJK
   embed.py      dựng embed + tự kiểm tra giới hạn Discord
   store.py      cấu hình: cache + message ghim Discord + env (neo ở bất kỳ kênh nào)
   notify.py     gửi tới nhiều kênh, đính kèm số đếm + ảnh chụp, chống trùng id, liên tử, xem trước

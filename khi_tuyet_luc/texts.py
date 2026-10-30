@@ -55,6 +55,7 @@ class Realm:
     vi: str
     status: str
     colour: int
+    glyph: str  # ký tự Hán lớn in chìm ở ảnh số đếm (xem badge.py)
 
     @property
     def label(self) -> str:
@@ -65,21 +66,21 @@ REALMS: tuple[Realm, ...] = (
     # 15 bậc × 50 mạng → 無間 ở mốc 700. Dải màu đi từ ngọc bích (sạch) → đồng
     # thau → gạch nung → huyết tươi → huyết khô → gần đen; độ sáng giảm đều mỗi
     # bậc nên càng chết nhiều embed càng tối (badge.py cũng tối dần theo bậc).
-    Realm(0, "未染", "Vô Nhiễm", "tay còn sạch", 0x2E8B6E),
-    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu đã khô", 0x9F632E),
-    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước đã chậm", 0xA6562E),
-    Realm(3, "煞氣", "Sát Khí", "quỷ thần tránh xa", 0xA74A2E),
-    Realm(4, "血債", "Huyết Trái", "nợ máu chồng nợ máu", 0xA93F2E),
-    Realm(5, "入魔", "Nhập Ma", "ma khí vào gân cốt", 0xA5342F),
-    Realm(6, "骨寒", "Cốt Hàn", "lạnh buốt tận xương", 0x9A2D30),
-    Realm(7, "業障", "Nghiệp Chướng", "nghiệp cũ quấn cổ chân", 0x862731),
-    Realm(8, "幽途", "U Đồ", "đường âm một lối", 0x72222E),
-    Realm(9, "黃泉", "Hoàng Tuyền", "suối vàng đã gọi", 0x601D2A),
-    Realm(10, "輪迴", "Luân Hồi", "quên cả tên mình", 0x4F1825),
-    Realm(11, "修羅", "Tu La", "sát nghiệp không dứt", 0x421421),
-    Realm(12, "忘川", "Vong Xuyên", "uống nước quên kiếp", 0x35111B),
-    Realm(13, "阿鼻", "A Tỳ", "đọa vào a tỳ", 0x290E17),
-    Realm(14, "無間", "Vô Gián", "không còn lối ra", 0x1E0A11),
+    Realm(0, "未染", "Vô Nhiễm", "tay còn sạch", 0x2E8B6E, "淨"),
+    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu đã khô", 0x9F632E, "血"),
+    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước đã chậm", 0xA6562E, "傷"),
+    Realm(3, "煞氣", "Sát Khí", "quỷ thần tránh xa", 0xA74A2E, "煞"),
+    Realm(4, "血債", "Huyết Trái", "nợ máu chồng nợ máu", 0xA93F2E, "債"),
+    Realm(5, "入魔", "Nhập Ma", "ma khí vào gân cốt", 0xA5342F, "魔"),
+    Realm(6, "骨寒", "Cốt Hàn", "lạnh buốt tận xương", 0x9A2D30, "骨"),
+    Realm(7, "業障", "Nghiệp Chướng", "nghiệp cũ quấn cổ chân", 0x862731, "業"),
+    Realm(8, "幽途", "U Đồ", "đường âm một lối", 0x72222E, "幽"),
+    Realm(9, "黃泉", "Hoàng Tuyền", "suối vàng đã gọi", 0x601D2A, "泉"),
+    Realm(10, "輪迴", "Luân Hồi", "quên cả tên mình", 0x4F1825, "輪"),
+    Realm(11, "修羅", "Tu La", "sát nghiệp không dứt", 0x421421, "羅"),
+    Realm(12, "忘川", "Vong Xuyên", "uống nước quên kiếp", 0x35111B, "川"),
+    Realm(13, "阿鼻", "A Tỳ", "đọa vào a tỳ", 0x290E17, "獄"),
+    Realm(14, "無間", "Vô Gián", "không còn lối ra", 0x1E0A11, "無"),
 )
 
 STREAK_TITLES = {3: " · 連死", 5: " · 五連", 7: " · 七連"}

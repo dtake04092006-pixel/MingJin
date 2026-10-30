@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import Checker, make_event  # noqa: E402
 
+from khi_tuyet_luc import badge as badge_art  # noqa: E402
 from khi_tuyet_luc import texts  # noqa: E402
 from khi_tuyet_luc.badge import lit_colour, render_count_png  # noqa: E402
 from khi_tuyet_luc.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
@@ -182,23 +183,53 @@ def main() -> int:
     check.ok("trạng thái bậc ≤ 26 ký tự", len(longest_status) <= 26, f"{len(longest_status)}: {longest_status}")
 
     print("\n=== Ảnh số đếm ở góc phải ===")
-    badge = render_count_png(52, 0x9F632E, 1)
+    badge = render_count_png(52, 0x9F632E, 1, "血")
     check.eq("52 kiếp cùng màu 染血 → PNG", badge[:4], b"\x89PNG")
     check.ok("ảnh số đếm có nội dung thật", len(badge) > 2000, str(len(badge)))
     check.ok(
         "số đếm đổi theo bậc (màu + vết máu)",
-        badge != render_count_png(52, 0x1E0A11, 14),
+        badge != render_count_png(52, 0x1E0A11, 14, "無"),
         "hai bậc phải ra hai ảnh khác nhau",
     )
     check.ok(
         "cùng số, bậc cao hơn → vết máu nham nhở hơn",
-        render_count_png(400, 0x35111B, 8) != render_count_png(400, 0x35111B, 12),
+        render_count_png(400, 0x35111B, 8, "川") != render_count_png(400, 0x35111B, 12, "川"),
         "bậc phải ảnh hưởng tới hình",
     )
     check.ok(
         "bậc cuối vẫn đọc được: vết máu sáng hơn màu thanh",
         _lum(sum(c << s for c, s in zip(lit_colour(0x1E0A11), (16, 8, 0)))) > _lum(0x1E0A11),
         str(lit_colour(0x1E0A11)),
+    )
+
+    print("\n=== Ký tự lớn chìm theo cảnh giới ===")
+    glyphs = [realm.glyph for realm in texts.REALMS]
+    check.eq("đủ ký tự cho 15 bậc", len(glyphs), 15)
+    check.eq("mỗi bậc một ký tự riêng", len(set(glyphs)), 15)
+    check.ok("ký tự đều là chữ Hán đơn", all(len(g) == 1 and ord(g) > 0x4E00 for g in glyphs), " ".join(glyphs))
+    missing = [g for g in glyphs if not (badge_art.GLYPH_DIR / f"{ord(g):x}.png").is_file()]
+    check.eq("đủ mặt nạ trong glyphs/", missing, [])
+    check.ok(
+        "ký tự khác → ảnh khác",
+        render_count_png(52, 0x9F632E, 1, "淨") != render_count_png(52, 0x9F632E, 1, "無"),
+        "phải đổi ký tự theo bậc",
+    )
+    check.ok("không có ký tự vẫn ra PNG", (render_count_png(52, 0x9F632E, 1) or b"")[:4] == b"\x89PNG")
+    check.ok(
+        "ký tự lạ → bỏ chữ chìm, vẫn ra PNG",
+        render_count_png(52, 0x9F632E, 1, "A") == render_count_png(52, 0x9F632E, 1),
+        "thiếu mặt nạ thì ảnh vẫn phải gửi được",
+    )
+    check.ok(
+        "ký tự chìm tối dần theo bậc",
+        _lum(sum(c << s for c, s in zip(badge_art._dim(0x9F632E, badge_art.GLYPH_LIGHT), (16, 8, 0))))
+        > _lum(
+            sum(
+                c << s
+                for c, s in zip(badge_art._dim(0x9F632E, badge_art.GLYPH_LIGHT - 14 * badge_art.GLYPH_STEP), (16, 8, 0))
+            )
+        ),
+        "bậc cuối phải chìm hơn bậc đầu",
     )
 
     print("\n=== Lưu cấu hình ===")

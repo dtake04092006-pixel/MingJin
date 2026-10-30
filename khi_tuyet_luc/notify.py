@@ -137,7 +137,6 @@ class Notifier:
             verse=verse,
             streak=streak,
             streak_line=streak_line,
-            test=event.is_test,
             lifetime=lifetime,
             player=player,
             player_avatar=player_avatar,

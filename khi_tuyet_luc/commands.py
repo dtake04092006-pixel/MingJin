@@ -50,7 +50,7 @@ def _can_send(channel: discord.abc.GuildChannel, me: discord.Member | None) -> s
 
 
 COLOUR_INFO = 0x7A6440
-COLOUR_OK = 0x4C7A6B
+COLOUR_OK = 0x2E8B6E
 COLOUR_WARN = 0x8C3A22
 
 
@@ -346,8 +346,7 @@ def build_group() -> app_commands.Group:
                 embed=_panel("Không dựng được embed", f"▸ {exc}", COLOUR_WARN), ephemeral=True
             )
             return
-        total = int(_store(interaction).config.deaths_total or 0) + 1
-        embed.set_footer(text=f"Xem trước lần chết #{total} · ảnh chỉ có khi tracker gửi kèm")
+        # Không ghi đè footer: xem trước phải giống hệt bản sẽ đăng lên kênh.
         kwargs: dict = {"embed": embed, "ephemeral": True}
         if file is not None:
             kwargs["file"] = file

@@ -1,7 +1,7 @@
 """Kho chữ cho embed: câu thơ, Hán tự, bậc chuyển, tầng ma khí.
 
-Không dùng emoji — chỉ Hán tự và ký tự trang trí, để hiển thị giống nhau trên
-mọi thiết bị và giữ đúng chất kiếm hiệp.
+Trang trí bằng hai nhãn emoji duy nhất (🩸 câu thơ, ⚡ liên tử), phần còn lại là
+Hán tự. Không kẻ khung, không lặp ký tự thành dãy dài — nhìn đỡ rối mắt.
 """
 
 from __future__ import annotations
@@ -9,7 +9,8 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-SEAL = "乂乂乂乂乂乂乂乂乂乂乂乂"
+VERSE_MARK = "🩸"   # nhãn câu thơ (thay cho dãy 乂 dày đặc trước đây)
+STREAK_MARK = "⚡"  # nhãn câu liên tử
 
 # 12 câu, chọn ngẫu nhiên không lặp lại câu vừa dùng
 VERSES: tuple[str, ...] = (
@@ -59,17 +60,19 @@ class Realm:
 
 
 REALMS: tuple[Realm, ...] = (
-    Realm(0, "未染", "Vô Nhiễm", "chưa vấy máu, tay còn sạch", 0x4C7A6B),
-    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu tiên đã khô trên áo", 0x6E7448),
-    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước chân đã chậm", 0x7A6440),
-    Realm(3, "煞氣", "Sát Khí", "sát khí bốc lên, quỷ thần tránh xa", 0x84502F),
-    Realm(4, "血債", "Huyết Trái", "nợ máu chồng lên nợ máu", 0x8C3A22),
-    Realm(5, "入魔", "Nhập Ma", "ma khí đã vào gân cốt", 0x971E1E),
-    Realm(6, "業障", "Nghiệp Chướng", "nghiệp cũ quấn lấy cổ chân", 0xA21515),
-    Realm(7, "幽途", "U Đồ", "đường âm đã mở, chỉ một lối", 0xAD0D0D),
-    Realm(8, "輪迴", "Luân Hồi", "chết rồi sống lại, quên cả tên mình", 0xB80808),
-    Realm(9, "修羅", "Tu La", "sa vào tu la đạo, sát nghiệp không dứt", 0xC70404),
-    Realm(10, "無間", "Vô Gián", "vô gián địa ngục, không còn lối ra", 0xD60000),
+    # Dải màu đi từ ngọc bích (sạch) → đồng thau → son → huyết khô → gần đen.
+    # Độ sáng giảm đều mỗi bậc, nên càng chết nhiều embed càng tối.
+    Realm(0, "未染", "Vô Nhiễm", "chưa vấy máu, tay còn sạch", 0x2E8B6E),
+    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu tiên đã khô trên áo", 0x8A5A2B),
+    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước chân đã chậm", 0x8F4526),
+    Realm(3, "煞氣", "Sát Khí", "sát khí bốc lên, quỷ thần tránh xa", 0x8C3422),
+    Realm(4, "血債", "Huyết Trái", "nợ máu chồng lên nợ máu", 0x87241F),
+    Realm(5, "入魔", "Nhập Ma", "ma khí đã vào gân cốt", 0x7A1A22),
+    Realm(6, "業障", "Nghiệp Chướng", "nghiệp cũ quấn lấy cổ chân", 0x6B1623),
+    Realm(7, "幽途", "U Đồ", "đường âm đã mở, chỉ một lối", 0x5C1223),
+    Realm(8, "輪迴", "Luân Hồi", "chết rồi sống lại, quên cả tên mình", 0x4E0F20),
+    Realm(9, "修羅", "Tu La", "sa vào tu la đạo, sát nghiệp không dứt", 0x420C1B),
+    Realm(10, "無間", "Vô Gián", "vô gián địa ngục, không còn lối ra", 0x360A15),
 )
 
 STREAK_TITLES = {3: " · 連死", 5: " · 五連", 7: " · 七連"}
@@ -96,15 +99,6 @@ def next_realm(total_deaths: int | None) -> Realm | None:
     if realm.index >= len(REALMS) - 1:
         return None
     return REALMS[realm.index + 1]
-
-
-def realm_progress(total_deaths: int | None) -> tuple[int, int]:
-    """(đã chết được mấy mạng trong bậc, mốc của bậc kế). Bậc cuối → (0, 0)."""
-    total = max(0, int(total_deaths or 0))
-    realm = realm_for(total)
-    if realm.index >= len(REALMS) - 1:
-        return 0, 0
-    return total - realm.index * REALM_STEP, (realm.index + 1) * REALM_STEP
 
 
 def streak_suffix(streak: int) -> str:

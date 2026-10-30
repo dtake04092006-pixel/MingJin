@@ -75,30 +75,25 @@ def _title(event: DeathEvent, streak: int, realm: texts.Realm) -> str:
 
 
 def _realm_value(total: int) -> str:
-    """'未染 · Vô Nhiễm' + trạng thái + tiến độ tới bậc kế."""
-    realm = texts.realm_for(total)
-    lines = [realm.label, realm.status]
-    nxt = texts.next_realm(total)
-    if nxt is None:
-        lines.append(f"{total} · đã tột cùng")
-    else:
-        _done, mark = texts.realm_progress(total)
-        lines.append(f"{total}/{mark} · còn {mark - total} mạng → {nxt.cn}")
-    return "\n".join(lines)
+    """Chỉ nhãn bậc, gọn một dòng — để 3 cột thẳng hàng nhau."""
+    return texts.realm_for(total).label
 
 
-def _description(verse: str, streak_line: str | None) -> str:
-    lines = [texts.SEAL, verse]
+def _description(verse: str, streak_line: str | None, realm: texts.Realm) -> str:
+    """Thơ + nhãn emoji + câu trạng thái in nghiêng của bậc hiện tại."""
+    lines = [f"{texts.VERSE_MARK} {verse}"]
     if streak_line:
-        lines.append(streak_line)
-    lines.append(texts.SEAL)
+        lines.append(f"{texts.STREAK_MARK} {streak_line}")
+    lines.append(f"*{realm.status}*")
     return _clip("\n".join(lines), MAX_DESCRIPTION)
 
 
-def _footer_text(event: DeathEvent, *, test: bool) -> str:
+def _footer_text(event: DeathEvent) -> str:
+    """Hiện trạng của lần chết: ảnh, backend, độ phân giải, độ tin cậy.
+
+    Không đánh dấu bản thử — embed thử và embed thật phải giống hệt nhau.
+    """
     parts = ["氣絕錄 · đã khắc vào huyết thư"]
-    if test:
-        parts.append("thông báo thử")
     if not event.has_image:
         parts.append("vô ảnh")
     if event.backend:
@@ -116,7 +111,6 @@ def build_embed(
     verse: str,
     streak: int = 1,
     streak_line: str | None = None,
-    test: bool = False,
     lifetime: int | None = None,
     player: dict | None = None,
     player_avatar: str | None = None,
@@ -129,7 +123,7 @@ def build_embed(
 
     embed = discord.Embed(
         title=_title(event, streak, realm),
-        description=_description(verse, streak_line),
+        description=_description(verse, streak_line, realm),
         colour=discord.Colour(colour),
         timestamp=event.ts_utc,
     )
@@ -140,23 +134,23 @@ def build_embed(
 
     death_label = f"#{event.death_no}" if event.death_no else "—"
     total_label = f"#{total}" if total else "—"
+    # 6 field, cả 6 đều inline và đều một dòng → lưới 3×2 thẳng hàng.
     embed.add_field(name="血 · Tử kỳ", value=death_label, inline=True)
     embed.add_field(name="命 · Tổng kiếp", value=total_label, inline=True)
     embed.add_field(
-        name="時 · Cách kiếp trước",
+        name="時 · Cách kiếp",
         value=_clip(texts.format_duration(event.seconds_since_prev), MAX_FIELD_VALUE),
         inline=True,
     )
     embed.add_field(name="境 · Cảnh giới", value=_clip(_realm_value(total), MAX_FIELD_VALUE), inline=True)
-    session = texts.format_elapsed(event.session_elapsed_s)
-    if event.session_id and session != "—":
-        session_value = f"{_clip(event.session_id, 32)} · {session}"
-    else:
-        session_value = _clip(event.session_id or session, MAX_FIELD_VALUE)
-    embed.add_field(name="◈ Phiên", value=session_value, inline=True)
     streak_value = f"{streak} liên" if streak >= 2 else "—"
     embed.add_field(name="連 · Liên tử", value=streak_value, inline=True)
+    embed.add_field(
+        name="◈ Phiên",
+        value=_clip(texts.format_elapsed(event.session_elapsed_s), MAX_FIELD_VALUE),
+        inline=True,
+    )
 
-    embed.set_footer(text=_footer_text(event, test=test))
+    embed.set_footer(text=_footer_text(event))
     validate_embed(embed)
     return embed

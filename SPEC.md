@@ -147,7 +147,7 @@ Thứ tự đọc khi khởi động:
 
 Đăng ký dưới tên `ktl`. Bắt buộc quyền **Quản lý máy chủ** với lệnh cấu hình.
 
-**Mọi phản hồi của lệnh đều là embed** (không trả text trần): mỗi embed có tiêu đề ngắn, thân là các dòng `▸`, màu theo kết quả — thành công `0x4C7A6B`, cảnh báo/lỗi `0x8C3A22`, thông tin `0x7A6440`.
+**Mọi phản hồi của lệnh đều là embed** (không trả text trần): mỗi embed có tiêu đề ngắn, thân là các dòng `▸`, màu theo kết quả — thành công `0x2E8B6E`, cảnh báo/lỗi `0x8C3A22`, thông tin `0x7A6440`.
 
 | Lệnh | Tham số | Tác dụng |
 |---|---|---|
@@ -174,10 +174,14 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 
 Nguyên tắc thị giác:
 
-- Không dùng emoji — chỉ Hán tự và ký tự trang trí (`氣絕錄`, `乂`, `血`, `煞`, `◈`, `︽`). Nhẹ, đúng chất, không bị Discord render lệch.
-- Bảng màu theo cảnh giới (mỗi 50 mạng đổi một bậc, xem §12) — từ `0x4C7A6B` (未染) tới `0xD60000` (無間).
+- Trang trí tối thiểu: đúng **hai** nhãn emoji — `🩸` cho câu thơ, `⚡` cho dòng liên tử. Không kẻ khung trên/dưới, không lặp ký tự thành dãy dài (dãy `乂` cũ gây rối mắt). Phần còn lại là Hán tự (`氣絕錄`, `血`, `命`, `境`, `連`, `◈`).
+- Bảng màu theo cảnh giới (mỗi 50 mạng đổi một bậc, xem §12): ngọc bích `#2E8B6E` (未染) → đồng thau → son → huyết khô → gần đen `#360A15` (無間). Độ sáng giảm đều từng bậc nên **càng chết nhiều, thanh màu càng tối**; có test kiểm tra điều này.
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
 - Liên tử (chết trong vòng 90 s so với lần trước) → thêm dòng "ma khí nhập thể" và tiêu đề đổi hậu tố.
+- **Lưới field 3×2 thẳng hàng**: đúng 6 field, tất cả `inline=True` và **giá trị chỉ một dòng**. Tên field đều hai chữ (`血 · Tử kỳ`, `命 · Tổng kiếp`, `時 · Cách kiếp`, `境 · Cảnh giới`, `連 · Liên tử`, `◈ Phiên`) để ba cột rộng bằng nhau.
+- Field `境 · Cảnh giới` chỉ ghi nhãn bậc (`未染 · Vô Nhiễm`) — **không** hiện tiến độ kiểu `40/50 · còn 10 mạng → 染血`. Câu trạng thái của bậc chuyển xuống mô tả, in nghiêng.
+- Field `◈ Phiên` chỉ hiện thời lượng phiên (`15:02`), không nhét id phiên thô.
+- Bản thử (`/ktl test`, `/ktl preview`) trông **y hệt** bản thật: không có chữ "thử"/"test" ở footer hay phiên.
 
 Mô phỏng bố cục:
 
@@ -186,16 +190,16 @@ Mô phỏng bố cục:
 ┌───────────────────────────────────────────────┐
 │ Khí Tuyệt Lục                                      │  ← author
 │ 氣絕錄 · Tứ Chuyển · Nhập Ma                    │  ← title
-│ 乂乂乂乂乂乂乂乂乂乂乂                        │
-│ Ma khí quấn thân, huyết vụ tản như khói nhang │  ← description
-│ tàn. Ngươi ngã xuống — bia đá khắc thêm một   │
-│ vết.                                          │
-│ 乂乂乂乂乂乂乂乂乂乂乂                        │
-│ 血 · Tử kỳ      │ 命 · Tổng kiếp │ 時 · Cách   │  ← fields inline
-│ #3              │ #47            │ 2 phút 41 s │
-│ 境 · Cảnh giới   │ ◈ Phiên        │ 連 · Liên tử│
-│ 未染 · Vô Nhiễm  │ 23:15 → nay    │ —           │
-│ 氣絕錄 · đã khắc vào huyết thư                  │  ← footer
+│ 🩸 Ma khí quấn thân, huyết vụ tản như khói    │  ← description
+│ nhang tàn. Ngươi ngã xuống — bia đá khắc thêm │
+│ một vết.                                      │
+│ ⚡ Chết lại quá nhanh — ma khí chưa kịp tản.  │  ← chỉ khi liên tử
+│ *ma khí đã vào gân cốt*                        │  ← trạng thái bậc, in nghiêng
+│ 血 · Tử kỳ     │ 命 · Tổng kiếp │ 時 · Cách kiếp│  ← lưới 3×2
+│ #3             │ #47            │ 2 phút 41 s   │
+│ 境 · Cảnh giới  │ 連 · Liên tử   │ ◈ Phiên      │
+│ 未染 · Vô Nhiễm │ —              │ 15:02         │
+│ 氣絕錄 · đã khắc vào huyết thư · dxgi · 1920×1080│  ← footer (hiện trạng)
 └───────────────────────────────────────────────┘
 ```
 
@@ -309,23 +313,26 @@ tổng kiếp = cfg.deaths_total          # admin đặt bằng /ktl deaths
 
 | Tổng kiếp | Hán | Việt | Trạng thái | Màu |
 |---|---|---|---|---|
-| 0–49 | 未染 | Vô Nhiễm | chưa vấy máu, tay còn sạch | `#4C7A6B` |
-| 50–99 | 染血 | Nhiễm Huyết | vết máu đầu tiên đã khô trên áo | `#6E7448` |
-| 100–149 | 傷痕 | Thương Ngân | thân đầy sẹo, bước chân đã chậm | `#7A6440` |
-| 150–199 | 煞氣 | Sát Khí | sát khí bốc lên, quỷ thần tránh xa | `#84502F` |
-| 200–249 | 血債 | Huyết Trái | nợ máu chồng lên nợ máu | `#8C3A22` |
-| 250–299 | 入魔 | Nhập Ma | ma khí đã vào gân cốt | `#971E1E` |
-| 300–349 | 業障 | Nghiệp Chướng | nghiệp cũ quấn lấy cổ chân | `#A21515` |
-| 350–399 | 幽途 | U Đồ | đường âm đã mở, chỉ một lối | `#AD0D0D` |
-| 400–449 | 輪迴 | Luân Hồi | chết rồi sống lại, quên cả tên mình | `#B80808` |
-| 450–499 | 修羅 | Tu La | sa vào tu la đạo, sát nghiệp không dứt | `#C70404` |
-| 500+ | 無間 | Vô Gián | vô gián địa ngục, không còn lối ra | `#D60000` |
+| 0–49 | 未染 | Vô Nhiễm | chưa vấy máu, tay còn sạch | `#2E8B6E` |
+| 50–99 | 染血 | Nhiễm Huyết | vết máu đầu tiên đã khô trên áo | `#8A5A2B` |
+| 100–149 | 傷痕 | Thương Ngân | thân đầy sẹo, bước chân đã chậm | `#8F4526` |
+| 150–199 | 煞氣 | Sát Khí | sát khí bốc lên, quỷ thần tránh xa | `#8C3422` |
+| 200–249 | 血債 | Huyết Trái | nợ máu chồng lên nợ máu | `#87241F` |
+| 250–299 | 入魔 | Nhập Ma | ma khí đã vào gân cốt | `#7A1A22` |
+| 300–349 | 業障 | Nghiệp Chướng | nghiệp cũ quấn lấy cổ chân | `#6B1623` |
+| 350–399 | 幽途 | U Đồ | đường âm đã mở, chỉ một lối | `#5C1223` |
+| 400–449 | 輪迴 | Luân Hồi | chết rồi sống lại, quên cả tên mình | `#4E0F20` |
+| 450–499 | 修羅 | Tu La | sa vào tu la đạo, sát nghiệp không dứt | `#420C1B` |
+| 500+ | 無間 | Vô Gián | vô gián địa ngục, không còn lối ra | `#360A15` |
 
-Màu embed = màu cảnh giới (đây là thứ duy nhất đổi theo tổng kiếp). Chết liên tiếp ≥5 lần
-vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
+Màu embed = màu cảnh giới (đây là thứ duy nhất đổi theo tổng kiếp). Dải màu đi từ ngọc bích
+sạch sẽ → đồng thau → son → huyết khô → gần đen; độ sáng giảm đều từng bậc nên **càng chết
+nhiều thanh màu càng tối** (test `màu tối dần theo bậc` chặn ai chỉnh sai thứ tự).
+Chết liên tiếp ≥5 lần vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
 
 Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới (`氣絕錄 · 第三 · Tam Chuyển · 無間`),
-field `境 · Cảnh giới` ghi `未染 · Vô Nhiễm` + trạng thái + `còn N mạng → 染血`.
+field `境 · Cảnh giới` chỉ ghi nhãn bậc `未染 · Vô Nhiễm`; câu trạng thái của bậc nằm ở mô tả,
+in nghiêng (không kèm tiến độ tới bậc kế — chỉ `/ktl deaths` và `/ktl status` mới nhắc "còn N mạng").
 
 ### 12.3 Người chơi
 

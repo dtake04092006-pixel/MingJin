@@ -78,7 +78,7 @@ def main() -> int:
     check.eq("tiếp tục → streak 3", store.config.streak, 3)
     asyncio.run(notifier.dispatch(make_event(event_id="s4", since_prev=600)))
     check.eq("cách xa → reset 1", store.config.streak, 1)
-    check.eq("streak ≥ 3 có field liên tử", channels[0].embeds[2].to_dict()["fields"][5]["value"], "3 liên")
+    check.eq("streak ≥ 3 có field liên tử", channels[0].embeds[2].to_dict()["fields"][4]["value"], "3 liên")
 
     # 7. một kênh lỗi quyền, kênh khác vẫn nhận
     forbidden = discord.Forbidden(type("R", (), {"status": 403, "reason": "Forbidden"})(), "missing access")
@@ -109,8 +109,13 @@ def main() -> int:
     error = asyncio.run(notifier.send_test(3030))
     check.ok("send_test không lỗi", error is None, str(error))
     check.eq("send_test tạo 1 message", len(channels[0].sent), 1)
-    check.ok("send_test ghi 'thông báo thử'", "thông báo thử" in channels[0].embeds[0].to_dict()["footer"]["text"])
     check.ok("send_test không đổi stats", not store.config.stats.get("received"), str(store.config.stats))
+    test_embed = channels[0].embeds[0].to_dict()
+    check.ok(
+        "send_test trông y như thật (không lộ chữ 'thử')",
+        "thử" not in test_embed["footer"]["text"] and "test" not in test_embed["footer"]["text"].lower(),
+        test_embed["footer"]["text"],
+    )
 
     # 11. tổng kiếp tự tăng, cảnh giới đổi theo số của bot
     bot, store, channels, notifier = build([(4040, None)])
@@ -124,7 +129,7 @@ def main() -> int:
     store.set_deaths(49)
     asyncio.run(notifier.dispatch(make_event(event_id="r2", total=1)))
     top = channels[0].embeds[1].to_dict()
-    check.eq("chết lần 50 → màu 染血", top["color"], 0x6E7448)
+    check.eq("chết lần 50 → màu 染血", top["color"], 0x8A5A2B)
     check.ok("title có 染血", "染血" in top["title"], top["title"])
     check.eq("deaths_total = 50", store.config.deaths_total, 50)
 
@@ -168,6 +173,11 @@ def main() -> int:
     check.eq("preview: không có ảnh khi event mẫu không kèm ảnh", preview_file, None)
     check.ok("preview: không gửi gì lên kênh", channels[0].sent == [], str(len(channels[0].sent)))
     check.eq("preview: không đụng tổng kiếp thật", store.config.deaths_total, 39)
+    check.ok(
+        "preview: footer là hiện trạng, không đánh dấu thử",
+        "thử" not in root["footer"]["text"] and "test" not in root["footer"]["text"].lower(),
+        root["footer"]["text"],
+    )
 
     return check.summary()
 

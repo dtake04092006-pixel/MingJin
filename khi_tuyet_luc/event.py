@@ -152,18 +152,18 @@ class DeathEvent:
 
     @classmethod
     def sample(cls, *, death_no: int = 3, total: int = 47) -> "DeathEvent":
-        """Event mẫu cho lệnh /ktl test — không cần tracker."""
+        """Event mẫu cho /ktl test và /ktl preview — trông y như thật, không đánh dấu 'test'."""
         now = datetime.now(timezone.utc)
         return cls(
             id=f"test-{int(now.timestamp())}",
             ts_utc=now,
             ts_local=now.strftime("%Y-%m-%d %H:%M:%S"),
-            session_id="s_test",
+            session_id=f"s_{now.strftime('%Y%m%d_%H%M')}",
             death_no=death_no,
             total_deaths=total,
             seconds_since_prev=161.4,
             session_elapsed_s=902.4,
             confidence=1.0,
-            backend="test",
-            tracker_version="test",
+            backend=None,  # bản mẫu không có backend thật → footer không bịa
+            tracker_version="",
         )

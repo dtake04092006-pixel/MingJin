@@ -12,9 +12,10 @@ from _common import Checker, make_event  # noqa: E402
 
 from khi_tuyet_luc import texts  # noqa: E402
 from khi_tuyet_luc.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
+from khi_tuyet_luc.event import DeathEvent  # noqa: E402
 from khi_tuyet_luc.store import MARKER, BotConfig, parse_message, render_message  # noqa: E402
 
-FIELD_ORDER = ["血 · Tử kỳ", "命 · Tổng kiếp", "時 · Cách kiếp trước", "境 · Cảnh giới", "◈ Phiên", "連 · Liên tử"]
+FIELD_ORDER = ["血 · Tử kỳ", "命 · Tổng kiếp", "時 · Cách kiếp", "境 · Cảnh giới", "連 · Liên tử", "◈ Phiên"]
 
 
 def main() -> int:
@@ -25,28 +26,33 @@ def main() -> int:
     embed = build_embed(event, verse=texts.VERSES[0])
     data = embed.to_dict()
     check.ok("title chứa 第一", "第一" in data["title"], data["title"])
-    check.eq("màu cảnh giới 未染", data["color"], 0x4C7A6B)
+    check.eq("màu cảnh giới 未染", data["color"], 0x2E8B6E)
     check.ok("title có cảnh giới 未染", "未染" in data["title"], data["title"])
     check.eq("thứ tự 6 field", [f["name"] for f in data["fields"]], FIELD_ORDER)
     check.eq("cách kiếp trước = —", data["fields"][2]["value"], "—")
     check.eq("tử kỳ = #1", data["fields"][0]["value"], "#1")
 
-    # 2. 47 mạng → vẫn 未染, còn 3 mạng tới 染血
+    # 2. 47 mạng → vẫn 未染; field cảnh giới chỉ có nhãn bậc, một dòng
     embed = build_embed(make_event(death_no=3, total=47), verse=texts.VERSES[1])
     data = embed.to_dict()
     check.ok("title có 第三", "第三" in data["title"], data["title"])
-    check.eq("màu 47 mạng = 未染", data["color"], 0x4C7A6B)
-    check.ok("field cảnh giới có 未染 · Vô Nhiễm", "未染 · Vô Nhiễm" in data["fields"][3]["value"], data["fields"][3]["value"])
-    check.ok("field cảnh giới có tiến độ 47/50", "47/50" in data["fields"][3]["value"], data["fields"][3]["value"])
-    check.ok("còn 3 mạng tới 染血", "còn 3 mạng → 染血" in data["fields"][3]["value"], data["fields"][3]["value"])
+    check.eq("màu 47 mạng = 未染", data["color"], 0x2E8B6E)
+    check.eq("field cảnh giới = nhãn bậc", data["fields"][3]["value"], "未染 · Vô Nhiễm")
+    check.ok("field cảnh giới KHÔNG có tiến độ 47/50", "47/50" not in data["fields"][3]["value"], data["fields"][3]["value"])
+    check.ok("trạng thái bậc nằm ở mô tả (in nghiêng)", "*chưa vấy máu, tay còn sạch*" in data["description"], data["description"])
+    check.ok("mọi field 1 dòng → lưới 3×2", all("\n" not in f["value"] for f in data["fields"]), str(data["fields"]))
 
     # 3. không có ảnh
     embed = build_embed(make_event(with_image=False), verse=texts.VERSES[2])
     check.ok("footer ghi vô ảnh", "vô ảnh" in embed.to_dict()["footer"]["text"])
 
-    # 4. thông báo thử
-    embed = build_embed(make_event(test=True), verse=texts.VERSES[3], test=True)
-    check.ok("footer ghi thông báo thử", "thông báo thử" in embed.to_dict()["footer"]["text"])
+    # 4. bản mẫu (dùng cho /ktl test và /ktl preview) trông y như thật
+    embed = build_embed(DeathEvent.sample(death_no=3, total=47), verse=texts.VERSES[3])
+    data = embed.to_dict()
+    footer = data["footer"]["text"]
+    check.ok("footer không ghi 'thông báo thử'", "thử" not in footer, footer)
+    check.ok("footer mẫu không có chữ 'test'", "test" not in footer.lower(), footer)
+    check.ok("phiên chỉ còn thời lượng, không lộ id thô", data["fields"][5]["value"] == "15:02", data["fields"][5]["value"])
 
     # 5. quá 10 lần chết → dùng số thường
     embed = build_embed(make_event(death_no=12, total=12), verse=texts.VERSES[4])
@@ -57,7 +63,7 @@ def main() -> int:
     data = embed.to_dict()
     check.eq("màu khi liên tử 5", data["color"], 0xE01B1B)
     check.ok("title có 五連", "五連" in data["title"], data["title"])
-    check.eq("field liên tử", data["fields"][5]["value"], "5 liên")
+    check.eq("field liên tử", data["fields"][4]["value"], "5 liên")
     check.ok("description có câu liên tử", texts.STREAK_VERSES[0] in data["description"])
 
     # 7. số liệu cực đại vẫn không vượt giới hạn
@@ -102,9 +108,9 @@ def main() -> int:
     # 10. tổng kiếp của bot thắng số của tracker
     embed = build_embed(make_event(death_no=3, total=1), verse=texts.VERSES[9], lifetime=520)
     data = embed.to_dict()
-    check.eq("lifetime 520 → màu 無間", data["color"], 0xD60000)
+    check.eq("lifetime 520 → màu 無間", data["color"], 0x360A15)
     check.eq("field tổng kiếp = #520", data["fields"][1]["value"], "#520")
-    check.ok("bậc cuối ghi 'đã tột cùng'", "đã tột cùng" in data["fields"][3]["value"], data["fields"][3]["value"])
+    check.eq("bậc cuối vẫn một dòng", len(data["fields"][3]["value"].split("\n")), 1)
 
     print("\n=== Kho chữ ===")
     check.eq("turn 1", texts.turn_label(1), ("第一", "Nhất"))
@@ -124,8 +130,17 @@ def main() -> int:
     check.eq("None → 未染", texts.realm_for(None).cn, "未染")
     check.eq("bậc cuối không có bậc kế", texts.next_realm(500), None)
     check.eq("bậc kế của 39 mạng", texts.next_realm(39).cn, "染血")
-    check.eq("tiến độ 39 mạng", texts.realm_progress(39), (39, 50))
-    check.eq("tiến độ bậc cuối", texts.realm_progress(520), (0, 0))
+
+    def _lum(colour: int) -> float:
+        return 0.2126 * ((colour >> 16) & 255) + 0.7152 * ((colour >> 8) & 255) + 0.0722 * (colour & 255)
+
+    ladder = [realm.colour for realm in texts.REALMS]
+    check.ok(
+        "màu tối dần theo bậc",
+        all(_lum(a) > _lum(b) for a, b in zip(ladder, ladder[1:])),
+        str([f"#{c:06X}" for c in ladder]),
+    )
+    check.ok("bậc cuối gần đen", _lum(ladder[-1]) < 30, str(_lum(ladder[-1])))
     check.eq("thời lượng 161s", texts.format_duration(161.4), "2 phút 41 giây")
     check.eq("thời lượng 60s", texts.format_duration(60), "1 phút")
     check.eq("thời lượng 3725s", texts.format_duration(3725), "1 giờ 2 phút")

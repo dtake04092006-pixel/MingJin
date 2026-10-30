@@ -214,12 +214,12 @@ outbox** để gửi lại sau.
 
 | Lệnh | Nội dung |
 |---|---|
-| `python tools\test_embed.py` | 71 kiểm tra: embed, giới hạn Discord, kho chữ, cảnh giới, lưu cấu hình |
-| `python tools\test_notify.py` | 49 kiểm tra: nhiều kênh, bật/tắt ảnh, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
+| `python tools\test_embed.py` | 74 kiểm tra: embed, giới hạn Discord, kho chữ, cảnh giới, lưu cấu hình |
+| `python tools\test_notify.py` | 50 kiểm tra: nhiều kênh, bật/tắt ảnh, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
 | `python tools\test_store.py` | 17 kiểm tra: neo cấu hình vào kênh thông báo, không tạo kênh riêng, khôi phục sau khi mất cache |
 | `python tools\test_webhook.py` | 33 kiểm tra: token, JSON hỏng, base64, 503/400/403 |
 
-Tổng cộng 170 kiểm tra, chạy hết vài giây, không cần token Discord.
+Tổng cộng 174 kiểm tra, chạy hết vài giây, không cần token Discord.
 
 ---
 

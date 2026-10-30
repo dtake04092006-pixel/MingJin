@@ -129,7 +129,7 @@ Bấm **Save Changes** → Render tự deploy. Chờ log:
 
 ```
 INFO  khi_tuyet_luc.web: HTTP nghe trên 0.0.0.0:10000
-INFO  khi_tuyet_luc.bot: đăng ký 13 slash command vào guild ...
+INFO  khi_tuyet_luc.bot: đăng ký 14 slash command vào guild ...
 INFO  khi_tuyet_luc.bot: đã đăng nhập: Khí Tuyệt Lục#xxxx (guild: 1)
 WARNING khi_tuyet_luc.bot: chưa cấu hình kênh nào — chạy /ktl add trong server
 ```
@@ -159,12 +159,14 @@ Gói Render free có 750 giờ/tháng, một service chạy 24/7 chỉ tốn ~74
 Gõ trong server (cần quyền Quản lý máy chủ):
 
 ```
-/ktl setup                 ← tạo #khi-tuyet-luc-config, ghim cấu hình (LÀM ĐẦU TIÊN)
+/ktl setup                 ← ghim cấu hình vào kênh thông báo BẠN CHỌN (LÀM ĐẦU TIÊN)
+/ktl setup channel:#huyết-thư   ← hoặc chỉ định rõ kênh giữ cấu hình
 /ktl add channel:#huyết-thư
 /ktl add channel:#nhật-ký image:false
 /ktl deaths count:39        ← đặt tổng kiếp đã có trước khi dùng tool
 /ktl player member:@tên     ← tên + avatar hiện trong embed (bỏ trống = xoá)
-/ktl test                  ← xem thử embed + ảnh
+/ktl preview               ← xem đúng embed sẽ hiện mỗi lần chết (chỉ mình bạn thấy)
+/ktl test                  ← gửi thử embed + ảnh vào kênh thông báo
 /ktl list
 /ktl image channel:#nhật-ký mode:on
 /ktl default-image mode:off
@@ -175,8 +177,16 @@ Gõ trong server (cần quyền Quản lý máy chủ):
 /ktl help                  ← bảng tóm tắt mọi lệnh (trả lời riêng tư)
 ```
 
-`/ktl setup` rất quan trọng: nó tạo message ghim giữ cấu hình. Đừng xoá kênh
-`#khi-tuyet-luc-config` hay message ghim trong đó — mất là mất cấu hình (phải `setup` lại).
+`/ktl setup` không tạo kênh mới: nó **ghim message cấu hình ngay trong kênh thông báo**
+(bỏ trống tham số thì lấy kênh thông báo đầu tiên; chỉ khi chưa có kênh nào bot mới
+tạo `#khi-tuyet-luc-config` làm chỗ tạm). Muốn chuyển neo sang kênh khác thì chạy lại
+`/ktl setup channel:#kênh-mới` — bot dời neo, không gửi thêm message trùng.
+
+Đừng xoá message ghim đó (cấu hình nằm trong đó, mất là phải `setup` lại). Kênh đang
+giữ neo cũng không bỏ được bằng `/ktl remove`.
+
+Mọi phản hồi của lệnh đều là **embed**, dùng chung ba màu: nâu đồng (thông tin),
+lục xám (thành công) và đỏ son (cảnh báo).
 
 ---
 
@@ -204,10 +214,12 @@ outbox** để gửi lại sau.
 
 | Lệnh | Nội dung |
 |---|---|
-| `python tools\test_embed.py` | 53 kiểm tra: embed, giới hạn Discord, kho chữ, lưu cấu hình |
-| `python tools\test_notify.py` | 32 kiểm tra: nhiều kênh, bật/tắt ảnh, chống trùng, liên tử, lỗi quyền |
+| `python tools\test_embed.py` | 71 kiểm tra: embed, giới hạn Discord, kho chữ, cảnh giới, lưu cấu hình |
+| `python tools\test_notify.py` | 49 kiểm tra: nhiều kênh, bật/tắt ảnh, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
+| `python tools\test_store.py` | 17 kiểm tra: neo cấu hình vào kênh thông báo, không tạo kênh riêng, khôi phục sau khi mất cache |
 | `python tools\test_webhook.py` | 33 kiểm tra: token, JSON hỏng, base64, 503/400/403 |
-| `python ..\tools\test_contract.py` | 14 kiểm tra: tracker gửi thật → handler thật, ảnh base64 giống hệt file gốc |
+
+Tổng cộng 170 kiểm tra, chạy hết vài giây, không cần token Discord.
 
 ---
 
@@ -220,13 +232,13 @@ khi_tuyet_luc/
   texts.py      câu thơ, Hán tự, bậc "chuyển", tầng ma khí
   event.py      parse payload tracker, giải mã ảnh base64 (≤ 8 MB, JPEG/PNG)
   embed.py      dựng embed + tự kiểm tra giới hạn Discord
-  store.py      cấu hình: cache + message ghim Discord + env
-  notify.py     gửi tới nhiều kênh, chế độ ảnh, chống trùng id, tính liên tử
+  store.py      cấu hình: cache + message ghim Discord + env (neo ở bất kỳ kênh nào)
+  notify.py     gửi tới nhiều kênh, chế độ ảnh, chống trùng id, tính liên tử, xem trước
   web.py        aiohttp: /health, /, /api/deaths
-  commands.py   13 lệnh slash
+  commands.py   14 lệnh slash (mọi phản hồi là embed)
   bot.py        lớp Bot, đồng bộ slash command, flush cấu hình định kỳ
 tools/
-  _common.py, test_embed.py, test_notify.py, test_webhook.py
+  _common.py, test_embed.py, test_notify.py, test_store.py, test_webhook.py
 ```
 
 ---
@@ -242,7 +254,7 @@ tools/
 | Tracker báo timeout lần đầu | Render đang ngủ → chờ 60 giây, event sẽ được gửi lại; bật UptimeRobot |
 | Ảnh không hiện, chỉ có embed | kênh đó đang `image:false`, hoặc event không có ảnh (footer ghi *vô ảnh*), hoặc bot thiếu quyền **Đính kèm tệp** |
 | Mất cấu hình sau khi deploy | chưa chạy `/ktl setup` (không có message ghim để đọc lại) |
-| Bot im sau khi Render restart | `#khi-tuyet-luc-config` bị xoá hoặc mất quyền Đọc lịch sử tin nhắn → cấp lại quyền, chạy lại `setup` |
+| Bot im sau khi Render restart | kênh đang giữ message ghim bị xoá hoặc mất quyền Đọc lịch sử tin nhắn → cấp lại quyền, chạy lại `setup` |
 | Build fail trên Render | kiểm tra `PYTHON_VERSION=3.12.10` và file `requirements.txt` |
 
 ---

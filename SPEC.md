@@ -130,10 +130,16 @@ Trả 503 khi chưa có kênh là cố ý: thà giữ event trong outbox (retry 
 Thứ tự đọc khi khởi động:
 
 1. **Cache cục bộ** `data/config.json` (nhanh, có thể bị xoá khi Render restart).
-2. **Nguồn sự thật: một message ghim trong Discord.** Bot giữ 1 message chứa JSON (marker `KTL_CONFIG_V1`) trong kênh tên `khi-tuyet-luc-config`; đọc/ghi bằng `channel.pins()`. Discord là DB → sống sót qua mọi lần deploy, không cần đĩa.
+2. **Nguồn sự thật: một message ghim trong Discord.** Bot giữ 1 message chứa JSON (marker `KTL_CONFIG_V1`); đọc/ghi bằng `channel.pins()`. Discord là DB → sống sót qua mọi lần deploy, không cần đĩa.
 3. **Env** (`CHANNELS`) làm nền tảng cuối, luôn được merge vào.
 
-`/ktl setup` tạo (hoặc tìm) kênh `khi-tuyet-luc-config`, ghim message cấu hình và trả lời hướng dẫn. Sau đó mọi lệnh khác đều ghi vào đó.
+**Nơi ghim cấu hình (neo) — không bắt buộc phải có kênh riêng:**
+
+- `/ktl setup channel:#kênh` → ghim vào đúng kênh đó (thường là kênh thông báo).
+- `/ktl setup` không truyền kênh → dùng **kênh thông báo đầu tiên** nếu đã có.
+- Chưa có kênh nào → mới tạo kênh riêng tư `khi-tuyet-luc-config` làm chỗ chứa duy nhất có thể.
+- Khi nạp lại, bot quét các kênh đã cấu hình (từ cache) để tìm message marker; không thấy mới tìm kênh tên `khi-tuyet-luc-config` (đường lui cho cấu hình cũ).
+- Không cho `/ktl remove` chính kênh đang neo cấu hình — phải `/ktl setup channel:#khác` trước, tránh mất cấu hình.
 
 ---
 
@@ -141,9 +147,11 @@ Thứ tự đọc khi khởi động:
 
 Đăng ký dưới tên `ktl`. Bắt buộc quyền **Quản lý máy chủ** với lệnh cấu hình.
 
+**Mọi phản hồi của lệnh đều là embed** (không trả text trần): mỗi embed có tiêu đề ngắn, thân là các dòng `▸`, màu theo kết quả — thành công `0x4C7A6B`, cảnh báo/lỗi `0x8C3A22`, thông tin `0x7A6440`.
+
 | Lệnh | Tham số | Tác dụng |
 |---|---|---|
-| `/ktl setup` | — | tạo/tìm kênh `khi-tuyet-luc-config`, ghim cấu hình |
+| `/ktl setup` | `channel` (tuỳ chọn) | ghim cấu hình vào kênh thông báo (mặc định: kênh đầu tiên), không có kênh nào mới tạo kênh riêng |
 | `/ktl add` | `channel`, `image` (tuỳ chọn) | thêm kênh nhận thông báo |
 | `/ktl remove` | `channel` | bỏ kênh |
 | `/ktl list` | — | bảng các kênh + chế độ ảnh + trạng thái |
@@ -151,7 +159,8 @@ Thứ tự đọc khi khởi động:
 | `/ktl default-image` | `mode` = `on`/`off` | mặc định chung |
 | `/ktl deaths` | `count` (0–100000) | đặt tổng kiếp đã có trước khi dùng tool |
 | `/ktl player` | `member` (bỏ trống = xoá) | ghim người chơi: tên + avatar trong embed |
-| `/ktl test` | `channel` (tuỳ chọn) | gửi 1 thông báo mẫu để xem embed ngay |
+| `/ktl test` | `channel` (tuỳ chọn) | gửi 1 thông báo mẫu **thật** vào kênh để xem embed ngay |
+| `/ktl preview` | `image` (tuỳ chọn) | xem **đúng embed sẽ hiện mỗi lần chết**, ngay trong câu trả lời riêng tư (không đăng lên kênh) |
 | `/ktl status` | — | cấu hình hiện tại + cảnh giới + người chơi + số event đã nhận |
 | `/ktl pause` | — | tạm ngưng thông báo (tracker vẫn được nhận) |
 | `/ktl resume` | — | chạy tiếp |
@@ -166,7 +175,7 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 Nguyên tắc thị giác:
 
 - Không dùng emoji — chỉ Hán tự và ký tự trang trí (`氣絕錄`, `乂`, `血`, `煞`, `◈`, `︽`). Nhẹ, đúng chất, không bị Discord render lệch.
-- Bảng màu theo "tầng ma khí" (theo tổng số lần chết): `0x7B0C0C` → `0x9B0F0F` → `0xB81313` → `0xD41A1A`.
+- Bảng màu theo cảnh giới (mỗi 50 mạng đổi một bậc, xem §12) — từ `0x4C7A6B` (未染) tới `0xD60000` (無間).
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
 - Liên tử (chết trong vòng 90 s so với lần trước) → thêm dòng "ma khí nhập thể" và tiêu đề đổi hậu tố.
 
@@ -184,8 +193,8 @@ Mô phỏng bố cục:
 │ 乂乂乂乂乂乂乂乂乂乂乂                        │
 │ 血 · Tử kỳ      │ 命 · Tổng kiếp │ 時 · Cách   │  ← fields inline
 │ #3              │ #47            │ 2 phút 41 s │
-│ 煞 · Ma khí     │ ◈ Phiên        │ 連 · Liên tử│
-│ Tứ chuyển       │ 23:15 → nay    │ —           │
+│ 境 · Cảnh giới   │ ◈ Phiên        │ 連 · Liên tử│
+│ 未染 · Vô Nhiễm  │ 23:15 → nay    │ —           │
 │ 氣絕錄 · đã khắc vào huyết thư                  │  ← footer
 └───────────────────────────────────────────────┘
 ```
@@ -216,12 +225,14 @@ bot code/bot/
 │  ├─ texts.py              # kho câu thơ, Hán tự, bậc chuyển
 │  ├─ event.py              # parse payload tracker + decode ảnh
 │  ├─ embed.py              # dựng embed kiếm hiệp
-│  ├─ store.py              # cấu hình: cache + message ghim Discord + env
-│  ├─ notify.py             # gửi tới nhiều kênh, chế độ ảnh
+│  ├─ store.py              # cấu hình: cache + message ghim Discord + env (neo linh hoạt)
+│  ├─ notify.py             # gửi tới nhiều kênh, chế độ ảnh, dựng payload xem trước
 │  ├─ web.py                # aiohttp: /health, /, /api/deaths
-│  └─ commands.py           # 13 lệnh slash
+│  └─ commands.py           # 14 lệnh slash, mọi phản hồi là embed
 └─ tools/
-   ├─ test_embed.py         # test thuần offline: giới hạn embed, nội dung
+   ├─ test_embed.py         # test thuần offline: giới hạn embed, nội dung, cảnh giới
+   ├─ test_notify.py        # nhiều kênh, chống trùng, liên tử, avatar, build_preview
+   ├─ test_store.py         # neo cấu hình: ghim vào kênh thông báo, khôi phục sau mất cache
    └─ test_webhook.py       # test handler bằng aiohttp TestClient (không cần token)
 ```
 
@@ -244,7 +255,9 @@ bot code/bot/
 
 | Test | Nội dung |
 |---|---|
-| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán |
+| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; kèm lưu/đọc cấu hình |
+| `tools/test_notify.py` | Nhiều kênh, bật/tắt ảnh, chống trùng `id`, liên tử, lỗi quyền, avatar người chơi, và `build_preview()` (đúng embed, không gửi gì, không đổi số liệu) |
+| `tools/test_store.py` | Neo cấu hình: ghim vào kênh thông báo, không tạo kênh riêng, không sinh message trùng, khôi phục sau khi mất cache (quét pin), kênh tên cũ vẫn đọc được |
 | `tools/test_webhook.py` | aiohttp TestClient: token sai → 403; thiếu `id` → 400; chưa có kênh → 503; hợp lệ → 200 và ảnh base64 được decode đúng kích thước; body quá lớn → 413 |
 
 Chạy được trên máy, không cần kết nối Discord, không cần Render.

@@ -3,6 +3,9 @@
 Đĩa của Render free là ephemeral (mất khi deploy/restart), nên nguồn sự thật là
 một message ghim trong Discord. `data/config.json` chỉ là cache cho lần khởi
 động nhanh, và biến môi trường `CHANNELS` là nền tảng cuối cùng.
+
+Message ghim không cần kênh riêng: nó có thể nằm ngay trong kênh thông báo
+(xem `attach()`), chỉ khi chưa có kênh nào mới tạo `khi-tuyet-luc-config`.
 """
 
 from __future__ import annotations
@@ -278,20 +281,65 @@ class ConfigStore:
         return True
 
     async def _load_discord(self, bot: discord.Client) -> None:
-        channel = self.find_config_channel(bot)
+        self._apply_env()  # để có danh sách kênh làm manh mối dò tìm
+        channel, message = await self._find_anchor(bot)
         if channel is None:
-            self._apply_env()
             self.source = "cache" if self.source == "cache" else "default"
             return
         self._channel = channel
-        self._message = await self._find_message(channel)
-        if self._message is not None:
-            parsed = parse_message(self._message.content or "")
+        self._message = message
+        if message is not None:
+            parsed = parse_message(message.content or "")
             if parsed is not None:
                 self._cfg = parsed
+                self._apply_env()  # merge lại CHANNELS sau khi thay cấu hình
                 self.source = "discord"
-                log.info("nạp cấu hình từ Discord: %s kênh", len(self._cfg.channels))
-        self._apply_env()
+                log.info("nạp cấu hình từ Discord (#%s): %s kênh", channel.name, len(self._cfg.channels))
+
+    async def _find_anchor(self, bot: discord.Client) -> tuple[discord.TextChannel | None, discord.Message | None]:
+        """Tìm message cấu hình: kênh đã cấu hình trước → kênh tên cũ → quét pin."""
+        for channel_id in self._cfg.channel_ids():
+            channel = bot.get_channel(channel_id)
+            if not isinstance(channel, discord.TextChannel):
+                try:
+                    fetched = await bot.fetch_channel(channel_id)
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                    continue
+                channel = fetched if isinstance(fetched, discord.TextChannel) else None
+            if channel is None:
+                continue
+            message = await self._find_message(channel)
+            if message is not None:
+                return channel, message
+        legacy = self.find_config_channel(bot)
+        if legacy is not None:
+            message = await self._find_message(legacy)
+            if message is not None:
+                return legacy, message
+        return await self._scan_pins(bot)
+
+    async def _scan_pins(
+        self, bot: discord.Client, limit: int = 60
+    ) -> tuple[discord.TextChannel | None, discord.Message | None]:
+        """Dự phòng khi cache trắng: quét pin các kênh chữ (có giới hạn) tìm marker."""
+        scanned = 0
+        for guild in bot.guilds:
+            for channel in guild.text_channels:
+                me = guild.me
+                if me is not None and not channel.permissions_for(me).read_message_history:
+                    continue
+                scanned += 1
+                if scanned > limit:
+                    log.warning("đã quét %s kênh mà chưa thấy cấu hình — bỏ cuộc", limit)
+                    return None, None
+                try:
+                    async for message in channel.pins():
+                        if message.author.id == self._bot_user_id and MARKER in (message.content or ""):
+                            log.info("tìm lại được cấu hình trong #%s", channel.name)
+                            return channel, message
+                except (discord.Forbidden, discord.HTTPException):
+                    continue
+        return None, None
 
     @staticmethod
     def find_config_channel(bot: discord.Client) -> discord.TextChannel | None:
@@ -316,11 +364,28 @@ class ConfigStore:
             log.warning("không đọc được lịch sử #%s", channel.name)
         return None
 
-    async def ensure_channel(self, guild: discord.Guild) -> discord.TextChannel:
-        """Tạo kênh cấu hình riêng tư nếu chưa có."""
+    @property
+    def config_channel_id(self) -> int | None:
+        return self._channel.id if self._channel is not None else None
+
+    def is_anchor(self, channel_id: int) -> bool:
+        """Kênh này có đang giữ message cấu hình không."""
+        return self._channel is not None and self._channel.id == int(channel_id)
+
+    async def attach(self, channel: discord.TextChannel) -> bool:
+        """Neo cấu hình vào `channel`, dùng lại message marker nếu đã có.
+
+        Trả về True khi tìm thấy message cũ (không cần tạo mới).
+        """
+        self._channel = channel
+        self._message = await self._find_message(channel)
+        return self._message is not None
+
+    async def create_config_channel(self, guild: discord.Guild) -> discord.TextChannel:
+        """Đường lui khi server chưa có kênh thông báo nào: tạo kênh riêng tư."""
         existing = discord.utils.get(guild.text_channels, name=CONFIG_CHANNEL_NAME)
         if isinstance(existing, discord.TextChannel):
-            self._channel = existing
+            await self.attach(existing)
             return existing
 
         overwrites = {

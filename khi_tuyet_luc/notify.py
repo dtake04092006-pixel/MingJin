@@ -117,6 +117,49 @@ class Notifier:
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             return None
 
+    def _build_payload(
+        self,
+        event: DeathEvent,
+        with_image: bool,
+        verse: str,
+        streak: int,
+        streak_line: str | None,
+        lifetime: int | None = None,
+        player: dict | None = None,
+        player_avatar: str | None = None,
+    ) -> tuple[discord.Embed, discord.File | None]:
+        """Dựng (embed, file) — dùng chung cho gửi thật, gửi thử và xem trước."""
+        avatar = None
+        if self._bot.user is not None:
+            avatar = self._bot.user.display_avatar.url
+        embed = build_embed(
+            event,
+            verse=verse,
+            streak=streak,
+            streak_line=streak_line,
+            test=event.is_test,
+            lifetime=lifetime,
+            player=player,
+            player_avatar=player_avatar,
+            bot_avatar=avatar,
+        )
+        file = None
+        if with_image and event.image:
+            file = discord.File(io.BytesIO(event.image), filename=event.filename)
+        return embed, file
+
+    def build_preview(self, with_image: bool | None = None) -> tuple[discord.Embed, discord.File | None]:
+        """Đúng embed sẽ hiện ở lần chết kế tiếp — không gửi, không đụng thống kê."""
+        cfg = self._store.config
+        total = int(cfg.deaths_total or 0) + 1
+        event = DeathEvent.sample(death_no=max(1, int(cfg.streak or 1) + 1), total=total)
+        player, avatar = self._player_identity(cfg.player)
+        if with_image is None:
+            with_image = bool(cfg.default_image)
+        return self._build_payload(
+            event, with_image, self._picker.pick(), 1, None, total, player, avatar
+        )
+
     async def _send_one(
         self,
         channel_id: int,
@@ -133,28 +176,16 @@ class Notifier:
         if channel is None:
             return "kênh không tồn tại hoặc bot không có quyền xem"
 
-        avatar = None
-        if self._bot.user is not None:
-            avatar = self._bot.user.display_avatar.url
         try:
-            embed = build_embed(
-                event,
-                verse=verse,
-                streak=streak,
-                streak_line=streak_line,
-                test=event.is_test,
-                lifetime=lifetime,
-                player=player,
-                player_avatar=player_avatar,
-                bot_avatar=avatar,
+            embed, file = self._build_payload(
+                event, with_image, verse, streak, streak_line, lifetime, player, player_avatar
             )
         except ValueError as exc:
             return f"embed lỗi: {exc}"
 
         kwargs: dict = {"embed": embed}
-        if with_image and event.image:
-            buffer = io.BytesIO(event.image)
-            kwargs["file"] = discord.File(buffer, filename=event.filename)
+        if file is not None:
+            kwargs["file"] = file
 
         try:
             await channel.send(**kwargs)

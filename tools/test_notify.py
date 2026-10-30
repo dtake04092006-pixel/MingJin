@@ -154,6 +154,21 @@ def main() -> int:
     check.eq("xoá người chơi → tên bot", channels[0].embeds[2].to_dict()["author"]["name"], "Khí Tuyệt Lục")
     check.ok("set_player(None) xoá sạch", store.config.player is None, str(store.config.player))
 
+    # 13. xem trước: đúng embed sẽ hiện ở lần chết kế tiếp, không gửi gì
+    bot, store, channels, notifier = build([(6060, None)])
+    store.add_channel(6060, None)
+    store.set_deaths(39)
+    store.set_player(member)
+    bot.users[7] = type("U3", (), {"display_avatar": type("A", (), {"url": "https://cdn/tuoi.png"})()})()
+    preview, preview_file = notifier.build_preview()
+    root = preview.to_dict()
+    check.eq("preview: tổng kiếp = deaths_total + 1", root["fields"][1]["value"], "#40")
+    check.ok("preview: vẫn 未染 ở 39 mạng", "未染" in root["title"], root["title"])
+    check.eq("preview: author = người chơi", root["author"]["name"], "Tanya")
+    check.eq("preview: không có ảnh khi event mẫu không kèm ảnh", preview_file, None)
+    check.ok("preview: không gửi gì lên kênh", channels[0].sent == [], str(len(channels[0].sent)))
+    check.eq("preview: không đụng tổng kiếp thật", store.config.deaths_total, 39)
+
     return check.summary()
 
 

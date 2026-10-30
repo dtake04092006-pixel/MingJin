@@ -175,7 +175,7 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 Nguyên tắc thị giác:
 
 - Trang trí tối thiểu: đúng **hai** nhãn emoji — `🩸` cho câu thơ, `⚡` cho dòng liên tử. Không kẻ khung trên/dưới, không lặp ký tự thành dãy dài (dãy `乂` cũ gây rối mắt). Phần còn lại là Hán tự (`氣絕錄`, `血`, `命`, `境`, `連`, `◈`).
-- **Con số lớn ở góc phải (thumbnail)**: khung ảnh vuông chia hai lớp. Lớp dưới là **một ký tự Hán lớn, chìm**, đổi theo cảnh giới (`淨 → 血 → 傷 → 煞 → 債 → 魔 → 骨 → 業 → 幽 → 泉 → 輪 → 羅 → 川 → 獄 → 無`) và **tối dần theo bậc** như khắc sâu vào đá. Lớp trên là một **vết máu bắn** cùng tông màu thanh embed, con số **khoét rỗng** giữa vết máu kèm viền sáng men theo mép khoét. Vết máu nham nhở dần theo bậc: thêm tia bắn, thêm giọt văng, thêm vệt rỉ chảy dài, và từ giữa đường có vết cào xé; alpha giảm dần nên bậc cao chìm vào nền Discord tối. Màu vết máu là màu cảnh giới được nâng sàn độ sáng (giữ sắc, không pha trắng thành xám). Ký tự Hán nằm sẵn dưới dạng **mặt nạ trắng** trong `khi_tuyet_luc/glyphs/*.png` (tên file = mã Unicode) nên server không cần font CJK; thiếu mặt nạ thì bỏ lớp chữ, thiếu Pillow thì bỏ cả ảnh — embed vẫn gửi.
+- **Con số lớn ở góc phải (thumbnail)**: khung ảnh vuông chia hai lớp. Lớp dưới là **một ký tự Hán lớn, chìm**, đổi theo cảnh giới (`淨 → 血 → 傷 → 煞 → 債 → 魔 → 骨 → 業 → 幽 → 泉 → 輪 → 羅 → 川 → 獄 → 無`) và **tối dần theo bậc** như khắc sâu vào đá. Dọc **mép phải** là một **cột chữ Hán nhỏ** đánh vần số kiếp (`四十`, `七百`…), cũng tối dần theo bậc và tự thu nhỏ khi số dài — lấp khoảng trống bên phải như dòng đề trên bức khắc. Lớp trên là một **vết máu bắn** cùng tông màu thanh embed, con số **khoét rỗng** giữa vết máu kèm viền sáng men theo mép khoét (cỡ số giữ như bản cũ: khung 144/162 thay vì thu nhỏ). Vết máu nham nhở dần theo bậc: thêm tia bắn, thêm giọt văng, thêm vệt rỉ chảy dài, và từ giữa đường có vết cào xé; alpha giảm dần nên bậc cao chìm vào nền Discord tối. Màu vết máu là màu cảnh giới được nâng sàn độ sáng (giữ sắc, không pha trắng thành xám). Ký tự Hán nằm sẵn dưới dạng **mặt nạ trắng** trong `khi_tuyet_luc/glyphs/*.png` (tên file = mã Unicode, gồm cả chữ số `一二三四五六七八九十百千零`) nên server không cần font CJK; thiếu mặt nạ thì bỏ lớp chữ, thiếu Pillow thì bỏ cả ảnh — embed vẫn gửi.
 - Chữ phải **ngắn nhưng đắt**: câu thơ một dòng ≤ 52 ký tự, câu liên tử ≤ 40, trạng thái bậc ≤ 26, footer một dòng. Test chặn nếu ai viết dài lại.
 - Bảng màu theo cảnh giới (15 bậc, mỗi bậc 50 mạng, dừng ở 700 — xem §12): ngọc bích `#2E8B6E` (未染) → đồng thau → gạch nung → huyết tươi → huyết khô → gần đen `#1E0A11` (無間). Độ sáng giảm đều từng bậc nên **càng chết nhiều, thanh màu càng tối**; có test kiểm tra điều này.
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
@@ -231,8 +231,8 @@ bot code/bot/
 │  ├─ settings.py           # đọc env, validate
 │  ├─ texts.py              # kho câu thơ ngắn, Hán tự, bậc chuyển, bảng màu
 │  ├─ event.py              # parse payload tracker + decode ảnh
-│  ├─ badge.py              # vẽ PNG số tổng kiếp: ký tự bậc chìm + vết máu khoét số, nham nhở dần
-│  ├─ glyphs/               # 15 mặt nạ trắng chữ Hán (tên = mã Unicode) — server không cần font CJK
+│  ├─ badge.py              # vẽ PNG số tổng kiếp: ký tự bậc chìm + cột số dọc + vết máu khoét số
+│  ├─ glyphs/               # mặt nạ trắng chữ Hán + chữ số (tên = mã Unicode) — server không cần font CJK
 │  ├─ embed.py              # dựng embed kiếm hiệp
 │  ├─ store.py              # cấu hình: cache + message ghim Discord + env (neo linh hoạt)
 │  ├─ notify.py             # gửi tới nhiều kênh, đính kèm số đếm + ảnh, dựng payload xem trước
@@ -265,7 +265,7 @@ bot code/bot/
 
 | Test | Nội dung |
 |---|---|
-| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; chữ phải ngắn (câu thơ ≤ 52 ký tự, một dòng); 15 bậc cảnh giới đúng mốc (700 = 無間, không có bậc kế); ảnh số đếm là PNG, đổi màu theo bậc, cùng số mà bậc cao hơn thì vết máu nham nhở hơn, bậc cuối vẫn sáng hơn màu thanh; 15 bậc có 15 ký tự Hán riêng, đủ mặt nạ trong `glyphs/`, đổi ký tự là đổi ảnh, ký tự lạ/thiếu mặt nạ vẫn ra PNG và ký tự chìm tối dần theo bậc; kèm lưu/đọc cấu hình |
+| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; chữ phải ngắn (câu thơ ≤ 52 ký tự, một dòng); 15 bậc cảnh giới đúng mốc (700 = 無間, không có bậc kế); ảnh số đếm là PNG, đổi màu theo bậc, cùng số mà bậc cao hơn thì vết máu nham nhở hơn, bậc cuối vẫn sáng hơn màu thanh; 15 bậc có 15 ký tự Hán riêng, đủ mặt nạ trong `glyphs/`, đổi ký tự là đổi ảnh, ký tự lạ/thiếu mặt nạ vẫn ra PNG và ký tự chìm tối dần theo bậc; cột chữ số dọc mép phải có đủ mặt nạ chữ số, nằm đúng mép phải/phía trên, chữ lạ thì bỏ cột, số 9999 vẫn ra PNG; kèm lưu/đọc cấu hình |
 | `tools/test_notify.py` | Nhiều kênh, bật/tắt ảnh chụp (ảnh số đếm luôn đi kèm), thứ tự attachment + `thumbnail = attachment://ktl-count.png`, chống trùng `id`, liên tử, lỗi quyền, avatar người chơi, và `build_preview()` (đúng embed, không gửi gì, không đổi số liệu) |
 | `tools/test_store.py` | Neo cấu hình: ghim vào kênh thông báo, không tạo kênh riêng, không sinh message trùng, khôi phục sau khi mất cache (quét pin), kênh tên cũ vẫn đọc được |
 | `tools/test_webhook.py` | aiohttp TestClient: token sai → 403; thiếu `id` → 400; chưa có kênh → 503; hợp lệ → 200 và ảnh base64 được decode đúng kích thước; body quá lớn → 413 |
@@ -343,7 +343,8 @@ nên **càng chết nhiều thanh màu càng tối** (test `màu tối dần the
 Ảnh số đếm ở góc embed dùng cùng màu đó và **nham nhở dần theo bậc** (`badge.py`): bậc càng cao
 thì vết máu càng nhiều tia bắn, nhiều vệt rỉ, có vết cào xé, và chìm tối dần. Ký tự Hán của bậc
 cũng đổi theo từng bậc và **tối dần đều** (độ sáng bị chặn trên, mỗi bậc hạ thêm một nấc) — nên
-nhìn góc phải là biết đang ở đâu trong thang, không cần đọc số.
+nhìn góc phải là biết đang ở đâu trong thang, không cần đọc số. Cột chữ số dọc mép phải đánh vần
+con số bằng Hán tự (`四十`, `七百`), cũng tối dần theo bậc và thu nhỏ khi số dài để không tràn.
 Chết liên tiếp ≥5 lần vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
 
 Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới, và "Chuyển thứ mấy" lấy theo **tổng kiếp**

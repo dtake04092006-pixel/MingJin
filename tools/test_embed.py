@@ -245,6 +245,24 @@ def main() -> int:
         "bậc cuối phải chìm hơn bậc đầu",
     )
 
+    print("\n=== Cột chữ số dọc mép phải ===")
+    lacking = [c for c in "一二三四五六七八九十百千零" if not (badge_art.GLYPH_DIR / f"{ord(c):x}.png").is_file()]
+    check.eq("đủ mặt nạ chữ số Hán", lacking, [])
+    column = badge_art._column_layer("四十", 0x9F632E, 1)
+    check.ok("có lớp cột chữ", column is not None)
+    box = column.getbbox() if column is not None else None
+    check.ok(
+        "cột nằm ở mép phải, phía trên",
+        box is not None and box[0] > badge_art.SIZE * 0.75 and box[3] < badge_art.SIZE * 0.45,
+        str(box),
+    )
+    check.ok("không có chữ → không cột", badge_art._column_layer("", 0x9F632E, 1) is None)
+    check.ok("chữ không có mặt nạ → không cột", badge_art._column_layer("A", 0x9F632E, 1) is None)
+    check.ok(
+        "số 9999 (sáu chữ) vẫn ra PNG",
+        (render_count_png(9999, 0x1E0A11, 14, "無") or b"")[:4] == b"\x89PNG",
+    )
+
     print("\n=== Lưu cấu hình ===")
     cfg = BotConfig(default_image=True)
     cfg.channels["123"] = {"image": None}

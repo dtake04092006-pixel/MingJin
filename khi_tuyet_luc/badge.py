@@ -1,15 +1,16 @@
 """Vẽ ảnh số đếm tổng kiếp để gắn vào góc phải embed (thumbnail).
 
 Phong cách: một ký tự Hán lớn (đổi theo cảnh giới, càng lên bậc càng tối) nằm chìm
-ở nửa trên, còn vết máu bắn ra — với con số bị khoét rỗng ở giữa — chiếm góc dưới
-bên phải, như ai đó vừa đóng dấu máu lên chữ khắc. Bậc càng cao thì vết máu càng
-nham nhở: nhiều tia bắn, nhiều vệt rỉ chảy dài, và từ giữa đường còn có vết cào xé.
+ở nửa trên-trái; dọc mép phải là một **cột** chữ Hán nhỏ (số kiếp đánh vần, cũng tối
+dần theo bậc) như dòng đề trên bức khắc; còn vết máu bắn ra — với con số bị khoét
+rỗng ở giữa — đóng dấu ở góc dưới bên phải. Bậc càng cao thì vết máu càng nham nhở:
+nhiều tia bắn, nhiều vệt rỉ chảy dài, và từ giữa đường còn có vết cào xé.
 
 Discord không cho tô màu chữ, nên con số "đúng màu cảnh giới" phải là ảnh.
 Ảnh nền trong suốt → đẹp trên cả theme sáng lẫn tối. Cùng (số, màu, bậc, ký tự) luôn
 ra cùng một ảnh nhờ random có seed; thiếu Pillow thì trả None, embed vẫn gửi.
 Ký tự Hán nằm sẵn trong `glyphs/*.png` (mặt nạ trắng, tên = mã Unicode) để server
-không cần font CJK.
+không cần font CJK — gồm cả các chữ số 一二三四五六七八九十百千零 cho cột bên phải.
 """
 
 from __future__ import annotations
@@ -26,6 +27,8 @@ try:  # chỉ cần cho ảnh số đếm
 except ImportError:  # pragma: no cover - môi trường không cài Pillow
     Image = None  # type: ignore[assignment]
 
+from . import texts
+
 SIZE = 340           # vẽ lớn rồi để Discord thu nhỏ → nét hơn
 LIGHT_FLOOR = 0.30   # sàn độ sáng: bậc 無間 gần đen vẫn phải thấy trên nền tối
 SAT_FLOOR = 0.48
@@ -34,12 +37,19 @@ GLYPH_LIGHT = 0.34   # ký tự lớn chìm phía sau, bậc đầu còn hơi s�
 GLYPH_STEP = 0.014   # mỗi bậc tối thêm chừng này → bậc cuối gần như chạm đáy
 GLYPH_DIR = Path(__file__).with_name("glyphs")
 
-# Bố cục theo tỉ lệ cạnh ảnh: chữ ở trên-trái, vết máu + số ở dưới-phải.
-GLYPH_CX, GLYPH_CY = 0.46, 0.48
-GLYPH_SCALE = 0.76
-BLOOD_CX, BLOOD_CY = 0.69, 0.73
-BLOOD_R = 0.2
-BOX_SHORT, BOX_LONG = 104, 122  # khung chữ số (≤2 chữ số / 3–4 chữ số)
+# Bố cục theo tỉ lệ cạnh ảnh: chữ lớn trên-trái, cột chữ dọc mép phải,
+# vết máu + số ở dưới-phải.
+GLYPH_CX, GLYPH_CY = 0.41, 0.45
+GLYPH_SCALE = 0.74
+BLOOD_CX, BLOOD_CY = 0.67, 0.68
+BLOOD_R = 0.30
+BOX_SHORT, BOX_LONG = 144, 162  # khung chữ số (≤2 chữ số / 3–4 chữ số): to như bản cũ
+COLUMN_CX = 0.89               # cột chữ dọc nằm sát mép phải
+COLUMN_TOP, COLUMN_BOTTOM = 0.03, 0.40
+COLUMN_WIDTH = 0.17            # bề rộng tối đa một chữ trong cột
+COLUMN_GAP = 0.008
+COLUMN_LIGHT = 0.33            # cột chữ chìm hơn chữ lớn một nấc
+COLUMN_STEP = 0.010
 
 
 def _hls(colour: int, lightness: float) -> tuple[int, int, int]:
@@ -63,15 +73,21 @@ def lit_colour(colour: int, lightness: float | None = None) -> tuple[int, int, i
     return _hls(colour, LIGHT_FLOOR if lightness is None else lightness)
 
 
+def _glyph_mask(char: str):
+    """Mặt nạ trắng của một chữ Hán (tên file = mã Unicode); thiếu file thì None."""
+    if Image is None or not char:
+        return None
+    # Mặt nạ có sẵn trong glyphs/ → không cần font CJK trên server.
+    try:
+        return Image.open(GLYPH_DIR / f"{ord(char[0]):x}.png").convert("L")
+    except (OSError, ValueError):
+        return None
+
+
 def _watermark(glyph: str, colour: int, level: int):
     """Ký tự Hán lớn chìm phía sau vết máu. Bậc càng cao càng tối (như khắc sâu vào đá)."""
-    if Image is None or not glyph:
-        return None
-    # Mặt nạ trắng có sẵn trong glyphs/ (tên = mã Unicode) → không cần font CJK trên server.
-    path = GLYPH_DIR / f"{ord(glyph[0]):x}.png"
-    try:
-        mask = Image.open(path).convert("L")
-    except (OSError, ValueError):
+    mask = _glyph_mask(glyph)
+    if mask is None:
         return None
     side = int(SIZE * GLYPH_SCALE)
     mask = mask.resize((side, side), Image.LANCZOS)
@@ -82,6 +98,29 @@ def _watermark(glyph: str, colour: int, level: int):
         (int(SIZE * GLYPH_CX - side / 2), int(SIZE * GLYPH_CY - side / 2)),
         mask,
     )
+    return layer
+
+
+def _column_layer(text: str, colour: int, level: int):
+    """Cột chữ Hán dọc mép phải (số kiếp đánh vần), chìm hơn chữ lớn một nấc.
+
+    Chữ dài (vài nghìn) tự thu nhỏ cho vừa cột; chữ nào thiếu mặt nạ thì bỏ qua.
+    """
+    masks = [mask for mask in (_glyph_mask(char) for char in text) if mask is not None]
+    if not masks:
+        return None
+    gap = SIZE * COLUMN_GAP
+    room = SIZE * (COLUMN_BOTTOM - COLUMN_TOP) - gap * (len(masks) - 1)
+    side = int(min(SIZE * COLUMN_WIDTH, room / len(masks)))
+    if side < 10:  # quá nhiều chữ → thà bỏ cột còn hơn ra vệt nhòe
+        return None
+    tint = Image.new("RGBA", (side, side), (*_dim(colour, COLUMN_LIGHT - level * COLUMN_STEP), 210))
+    layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    x = int(SIZE * COLUMN_CX - side / 2)
+    y = SIZE * COLUMN_TOP + (room - side * len(masks)) / 2
+    for mask in masks:
+        layer.paste(tint, (x, int(y)), mask.resize((side, side), Image.LANCZOS))
+        y += side + gap
     return layer
 
 
@@ -195,7 +234,7 @@ def _gashes(mask, rng: random.Random, count: int) -> None:
 
 @functools.lru_cache(maxsize=96)
 def render_count_png(total: int, colour: int, level: int = 0, glyph: str = "") -> bytes | None:
-    """PNG trong suốt: chữ Hán lớn chìm + vết máu + con số khoét rỗng, càng lên bậc càng tối."""
+    """PNG trong suốt: chữ Hán lớn + cột số dọc mép phải + vết máu khoét số, càng lên bậc càng tối."""
     if Image is None:
         return None
 
@@ -218,6 +257,10 @@ def render_count_png(total: int, colour: int, level: int = 0, glyph: str = "") -
     mark = _watermark(glyph, colour, level)
     if mark is not None:  # ký tự lớn nằm dưới cùng, vết máu đóng dấu lên trên
         image.alpha_composite(mark)
+    han = texts.turn_label(total)[0]
+    column = _column_layer(han[1:] if han.startswith("第") else han, colour, level)
+    if column is not None:  # cột chữ số dọc mép phải, cũng nằm dưới vết máu
+        image.alpha_composite(column)
     # Bậc càng cao thì vết máu càng chìm vào nền (alpha giảm) — vẫn thấy nhưng tối hơn.
     alpha = 236 - level * 4
     image.paste(Image.new("RGBA", (SIZE, SIZE), (*blood, alpha)), (0, 0), mask)

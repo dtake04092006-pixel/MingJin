@@ -1,7 +1,8 @@
 """Gửi thông báo tới các kênh đã cấu hình.
 
 Thứ tự trong message: ảnh (attachment thường) ở trên, embed ở dưới — nên ảnh
-KHÔNG được nhét vào embed.
+KHÔNG được nhét vào embed. Riêng ảnh số đếm là thumbnail của embed, nên đi
+kèm dưới dạng attachment và embed trỏ tới nó bằng `attachment://`.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from dataclasses import dataclass, field
 import discord
 
 from . import texts
+from .badge import render_count_png
 from .embed import build_embed
 from .event import DeathEvent
 from .store import ConfigStore
@@ -22,6 +24,7 @@ log = logging.getLogger(__name__)
 
 STREAK_WINDOW_S = 90.0
 SEEN_CACHE = 500
+COUNTER_FILENAME = "ktl-count.png"
 
 
 @dataclass
@@ -127,8 +130,8 @@ class Notifier:
         lifetime: int | None = None,
         player: dict | None = None,
         player_avatar: str | None = None,
-    ) -> tuple[discord.Embed, discord.File | None]:
-        """Dựng (embed, file) — dùng chung cho gửi thật, gửi thử và xem trước."""
+    ) -> tuple[discord.Embed, list[discord.File]]:
+        """Dựng (embed, các file đính kèm) — dùng chung cho gửi thật, gửi thử, xem trước."""
         avatar = None
         if self._bot.user is not None:
             avatar = self._bot.user.display_avatar.url
@@ -142,12 +145,20 @@ class Notifier:
             player_avatar=player_avatar,
             bot_avatar=avatar,
         )
-        file = None
-        if with_image and event.image:
-            file = discord.File(io.BytesIO(event.image), filename=event.filename)
-        return embed, file
 
-    def build_preview(self, with_image: bool | None = None) -> tuple[discord.Embed, discord.File | None]:
+        files: list[discord.File] = []
+        # Số lớn ở góc phải: cùng màu với thanh màu cảnh giới của embed.
+        total = int(lifetime if lifetime is not None else (event.total_deaths or 0))
+        png = render_count_png(total, embed.colour.value if embed.colour else texts.REALMS[0].colour)
+        if png is not None:
+            files.append(discord.File(io.BytesIO(png), filename=COUNTER_FILENAME))
+            embed.set_thumbnail(url=f"attachment://{COUNTER_FILENAME}")
+
+        if with_image and event.image:
+            files.append(discord.File(io.BytesIO(event.image), filename=event.filename))
+        return embed, files
+
+    def build_preview(self, with_image: bool | None = None) -> tuple[discord.Embed, list[discord.File]]:
         """Đúng embed sẽ hiện ở lần chết kế tiếp — không gửi, không đụng thống kê."""
         cfg = self._store.config
         total = int(cfg.deaths_total or 0) + 1
@@ -176,15 +187,15 @@ class Notifier:
             return "kênh không tồn tại hoặc bot không có quyền xem"
 
         try:
-            embed, file = self._build_payload(
+            embed, files = self._build_payload(
                 event, with_image, verse, streak, streak_line, lifetime, player, player_avatar
             )
         except ValueError as exc:
             return f"embed lỗi: {exc}"
 
         kwargs: dict = {"embed": embed}
-        if file is not None:
-            kwargs["file"] = file
+        if files:
+            kwargs["files"] = files
 
         try:
             await channel.send(**kwargs)

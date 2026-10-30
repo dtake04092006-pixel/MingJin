@@ -340,7 +340,7 @@ def build_group() -> app_commands.Group:
             )
             return
         try:
-            embed, file = notifier.build_preview(image)
+            embed, files = notifier.build_preview(image)
         except ValueError as exc:
             await interaction.followup.send(
                 embed=_panel("Không dựng được embed", f"▸ {exc}", COLOUR_WARN), ephemeral=True
@@ -348,8 +348,8 @@ def build_group() -> app_commands.Group:
             return
         # Không ghi đè footer: xem trước phải giống hệt bản sẽ đăng lên kênh.
         kwargs: dict = {"embed": embed, "ephemeral": True}
-        if file is not None:
-            kwargs["file"] = file
+        if files:
+            kwargs["files"] = files
         await interaction.followup.send(**kwargs)
 
     @group.command(name="status", description="Xem trạng thái bot và thống kê")

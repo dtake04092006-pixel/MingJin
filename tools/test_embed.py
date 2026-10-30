@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import Checker, make_event  # noqa: E402
 
 from khi_tuyet_luc import texts  # noqa: E402
+from khi_tuyet_luc.badge import lit_colour, render_count_png  # noqa: E402
 from khi_tuyet_luc.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
 from khi_tuyet_luc.event import DeathEvent  # noqa: E402
 from khi_tuyet_luc.store import MARKER, BotConfig, parse_message, render_message  # noqa: E402
@@ -39,7 +40,7 @@ def main() -> int:
     check.eq("màu 47 mạng = 未染", data["color"], 0x2E8B6E)
     check.eq("field cảnh giới = nhãn bậc", data["fields"][3]["value"], "未染 · Vô Nhiễm")
     check.ok("field cảnh giới KHÔNG có tiến độ 47/50", "47/50" not in data["fields"][3]["value"], data["fields"][3]["value"])
-    check.ok("trạng thái bậc nằm ở mô tả (in nghiêng)", "*chưa vấy máu, tay còn sạch*" in data["description"], data["description"])
+    check.ok("trạng thái bậc nằm ở mô tả (in nghiêng)", "*tay còn sạch*" in data["description"], data["description"])
     check.ok("mọi field 1 dòng → lưới 3×2", all("\n" not in f["value"] for f in data["fields"]), str(data["fields"]))
 
     # 3. không có ảnh
@@ -152,6 +153,29 @@ def main() -> int:
     picks = [picker.pick() for _ in range(20)]
     check.ok("không lặp câu liền trước", all(a != b for a, b in zip(picks, picks[1:])))
     check.ok("luôn nằm trong kho", all(p in texts.VERSES for p in picks))
+
+    print("\n=== Chữ ngắn gọn ===")
+    longest_verse = max(texts.VERSES, key=len)
+    longest_streak = max(texts.STREAK_VERSES, key=len)
+    longest_status = max((realm.status for realm in texts.REALMS), key=len)
+    check.ok("câu thơ một dòng", all("\n" not in v for v in texts.VERSES), repr(longest_verse))
+    check.ok("câu thơ ≤ 52 ký tự", len(longest_verse) <= 52, f"{len(longest_verse)}: {longest_verse}")
+    check.ok("câu liên tử ≤ 40 ký tự", len(longest_streak) <= 40, f"{len(longest_streak)}: {longest_streak}")
+    check.ok("trạng thái bậc ≤ 26 ký tự", len(longest_status) <= 26, f"{len(longest_status)}: {longest_status}")
+
+    print("\n=== Ảnh số đếm ở góc phải ===")
+    check.eq("52 kiếp cùng màu 染血 → PNG", render_count_png(52, 0x8A5A2B)[:4], b"\x89PNG")
+    check.ok("ảnh số đếm có nội dung thật", len(render_count_png(52, 0x8A5A2B)) > 1500, str(len(render_count_png(52, 0x8A5A2B))))
+    check.ok(
+        "số đếm đổi màu theo bậc",
+        render_count_png(52, 0x8A5A2B) != render_count_png(52, 0x360A15),
+        "hai bậc phải ra hai ảnh khác nhau",
+    )
+    check.ok(
+        "bậc cuối vẫn đọc được: số sáng hơn màu thanh",
+        _lum(sum(c << s for c, s in zip(lit_colour(0x360A15), (16, 8, 0)))) > _lum(0x360A15),
+        str(lit_colour(0x360A15)),
+    )
 
     print("\n=== Lưu cấu hình ===")
     cfg = BotConfig(default_image=True)

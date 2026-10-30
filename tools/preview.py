@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import make_event  # noqa: E402
 
 from khi_tuyet_luc import texts  # noqa: E402
+from khi_tuyet_luc.badge import render_count_png  # noqa: E402
 from khi_tuyet_luc.embed import build_embed  # noqa: E402
 
 
@@ -50,6 +51,8 @@ def main() -> int:
     )
     data = embed.to_dict()
     width = 62
+    badge = render_count_png(total, int(data["color"])) or b""
+    corner = f"[ số ở góc phải: {total} · ảnh {len(badge)} byte ]"
 
     print("\n┌" + "─" * (width + 2) + "┐")
     print("│ [ ảnh chụp khoảnh khắc TRƯỚC khi chết — attachment ]".ljust(width + 3) + "│")
@@ -57,6 +60,7 @@ def main() -> int:
     print("│ " + data["author"]["name"].ljust(width + 1) + "│")
     print("│ " + data["title"].ljust(width + 1) + "│")
     print("│ " + ("màu #%06X" % data["color"]).ljust(width + 1) + "│")
+    print("│ " + corner.rjust(width + 1) + "│")
     print("│ " + " " * (width + 1) + "│")
     for line in wrap(data["description"], width):
         print("│ " + line.ljust(width + 1) + "│")

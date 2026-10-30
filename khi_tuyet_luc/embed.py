@@ -93,7 +93,7 @@ def _footer_text(event: DeathEvent) -> str:
 
     Không đánh dấu bản thử — embed thử và embed thật phải giống hệt nhau.
     """
-    parts = ["氣絕錄 · đã khắc vào huyết thư"]
+    parts = ["氣絕錄 · khắc huyết thư"]
     if not event.has_image:
         parts.append("vô ảnh")
     if event.backend:

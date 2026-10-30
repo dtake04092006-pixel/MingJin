@@ -32,17 +32,25 @@ def main() -> int:
     result = asyncio.run(notifier.dispatch(make_event()))
     check.eq("gửi đủ 2 kênh", result.delivered, 2)
     check.eq("không lỗi", result.failed, 0)
-    check.eq("kênh 111 có ảnh", len(channels[0].files), 1)
-    check.eq("kênh 222 không ảnh", len(channels[1].files), 0)
+    check.eq("kênh 111 có ảnh", len(channels[0].files), 2)
+    check.eq("kênh 222 không gửi ảnh chụp", len(channels[1].files), 1)
     check.eq("kênh 222 vẫn có embed", len(channels[1].embeds), 1)
     check.ok("ảnh gửi kèm embed cùng message", bool(channels[0].embeds) and bool(channels[0].files))
-    check.eq("tên file ảnh", channels[0].sent[0]["file"].filename.startswith("khi-tuyet-luc-"), True)
+    names = [file.filename for file in channels[0].files]
+    check.eq("file đầu là số đếm", names[0], "ktl-count.png")
+    check.eq("file sau là ảnh chụp", names[1].startswith("khi-tuyet-luc-"), True)
+    check.eq("thumbnail trỏ tới số đếm", channels[0].embeds[0].to_dict()["thumbnail"]["url"], "attachment://ktl-count.png")
+    check.ok(
+        "kênh 222 vẫn có số đếm dù tắt ảnh",
+        [file.filename for file in channels[1].files] == ["ktl-count.png"],
+        str([file.filename for file in channels[1].files]),
+    )
 
-    # 2. event không có ảnh → chỉ embed
+    # 2. event không có ảnh → chỉ embed + số đếm
     bot, store, channels, notifier = build([(333, None)])
     store.add_channel(333, True)
     asyncio.run(notifier.dispatch(make_event(event_id="e2", with_image=False)))
-    check.eq("event không ảnh → 0 file", len(channels[0].files), 0)
+    check.eq("event không ảnh → chỉ còn số đếm", len(channels[0].files), 1)
     check.eq("event không ảnh → 1 embed", len(channels[0].embeds), 1)
 
     # 3. chống trùng id
@@ -165,12 +173,14 @@ def main() -> int:
     store.set_deaths(39)
     store.set_player(member)
     bot.users[7] = type("U3", (), {"display_avatar": type("A", (), {"url": "https://cdn/tuoi.png"})()})()
-    preview, preview_file = notifier.build_preview()
+    preview, preview_files = notifier.build_preview()
     root = preview.to_dict()
     check.eq("preview: tổng kiếp = deaths_total + 1", root["fields"][1]["value"], "#40")
     check.ok("preview: vẫn 未染 ở 39 mạng", "未染" in root["title"], root["title"])
     check.eq("preview: author = người chơi", root["author"]["name"], "Tanya")
-    check.eq("preview: không có ảnh khi event mẫu không kèm ảnh", preview_file, None)
+    check.eq("preview: chỉ có số đếm, không ảnh chụp", [f.filename for f in preview_files], ["ktl-count.png"])
+    check.eq("preview: số đếm đúng màu bậc 未染", root["thumbnail"]["url"], "attachment://ktl-count.png")
+    check.eq("preview: màu thanh = 未染", root["color"], 0x2E8B6E)
     check.ok("preview: không gửi gì lên kênh", channels[0].sent == [], str(len(channels[0].sent)))
     check.eq("preview: không đụng tổng kiếp thật", store.config.deaths_total, 39)
     check.ok(

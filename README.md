@@ -214,12 +214,12 @@ outbox** để gửi lại sau.
 
 | Lệnh | Nội dung |
 |---|---|
-| `python tools\test_embed.py` | 74 kiểm tra: embed, giới hạn Discord, kho chữ, cảnh giới, lưu cấu hình |
-| `python tools\test_notify.py` | 50 kiểm tra: nhiều kênh, bật/tắt ảnh, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
+| `python tools\test_embed.py` | 82 kiểm tra: embed, giới hạn Discord, độ dài câu chữ, cảnh giới, ảnh số đếm, lưu cấu hình |
+| `python tools\test_notify.py` | 55 kiểm tra: nhiều kênh, ảnh số đếm + ảnh chụp, chống trùng, liên tử, lỗi quyền, avatar, xem trước |
 | `python tools\test_store.py` | 17 kiểm tra: neo cấu hình vào kênh thông báo, không tạo kênh riêng, khôi phục sau khi mất cache |
 | `python tools\test_webhook.py` | 33 kiểm tra: token, JSON hỏng, base64, 503/400/403 |
 
-Tổng cộng 174 kiểm tra, chạy hết vài giây, không cần token Discord.
+Tổng cộng 187 kiểm tra, chạy hết vài giây, không cần token Discord.
 
 ---
 
@@ -229,15 +229,17 @@ Tổng cộng 174 kiểm tra, chạy hết vài giây, không cần token Discor
 khi_tuyet_luc/
   __main__.py   entrypoint: HTTP server + bot Discord + SIGTERM
   settings.py   đọc env / .env, kiểm tra bắt buộc
-  texts.py      câu thơ, Hán tự, bậc "chuyển", tầng ma khí
+  texts.py      câu thơ ngắn, Hán tự, bậc "chuyển", bảng màu theo cảnh giới
   event.py      parse payload tracker, giải mã ảnh base64 (≤ 8 MB, JPEG/PNG)
+  badge.py      vẽ PNG số tổng kiếp — con số lớn ở góc phải embed, màu theo bậc
   embed.py      dựng embed + tự kiểm tra giới hạn Discord
   store.py      cấu hình: cache + message ghim Discord + env (neo ở bất kỳ kênh nào)
-  notify.py     gửi tới nhiều kênh, chế độ ảnh, chống trùng id, tính liên tử, xem trước
+  notify.py     gửi tới nhiều kênh, đính kèm số đếm + ảnh chụp, chống trùng id, liên tử, xem trước
   web.py        aiohttp: /health, /, /api/deaths
   commands.py   14 lệnh slash (mọi phản hồi là embed)
   bot.py        lớp Bot, đồng bộ slash command, flush cấu hình định kỳ
 tools/
+  preview.py    in bố cục embed ra console trước khi lên Discord
   _common.py, test_embed.py, test_notify.py, test_store.py, test_webhook.py
 ```
 

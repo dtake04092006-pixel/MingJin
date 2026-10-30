@@ -123,7 +123,13 @@ class FakeChannel:
 
     @property
     def files(self) -> list:
-        return [item["file"] for item in self.sent if "file" in item]
+        """File đính kèm; send() có thể dùng `file=` (1 file) hoặc `files=` (danh sách)."""
+        collected: list = []
+        for item in self.sent:
+            if "file" in item and item["file"] is not None:
+                collected.append(item["file"])
+            collected.extend(item.get("files") or [])
+        return collected
 
     @property
     def embeds(self) -> list:

@@ -48,7 +48,7 @@ Ngoài phạm vi: đọc SQLite của tracker (không với tới được từ 
                                            └──────────────────────────────────┘
 ```
 
-Một process duy nhất: `aiohttp` web server + `discord.py` client chạy chung event loop. Không cần Redis, không cần DB ngoài.
+Một process duy nhất: `aiohttp` web server + `discord.py` client chạy chung event loop. Không cần Redis, không cần DB ngoài. Thư viện: `discord.py`, `aiohttp`, `Pillow` (chỉ để vẽ ảnh số đếm ở góc embed; thiếu Pillow thì bỏ ảnh, không hỏng gì khác).
 
 ---
 
@@ -175,6 +175,8 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 Nguyên tắc thị giác:
 
 - Trang trí tối thiểu: đúng **hai** nhãn emoji — `🩸` cho câu thơ, `⚡` cho dòng liên tử. Không kẻ khung trên/dưới, không lặp ký tự thành dãy dài (dãy `乂` cũ gây rối mắt). Phần còn lại là Hán tự (`氣絕錄`, `血`, `命`, `境`, `連`, `◈`).
+- **Con số lớn ở góc phải (thumbnail)**: số tổng kiếp vẽ thành PNG trong suốt (`badge.py`), màu lấy đúng màu thanh của embed nên luôn trùng theme cảnh giới; vòng tròn mảnh cùng tông bao quanh. Bậc càng tối thì số được nâng sáng vừa đủ (giữ sắc, không pha trắng thành xám) để vẫn đọc được trên nền Discord tối. Thiếu Pillow → bỏ ảnh, embed vẫn gửi.
+- Chữ phải **ngắn nhưng đắt**: câu thơ một dòng ≤ 52 ký tự, câu liên tử ≤ 40, trạng thái bậc ≤ 26, footer một dòng. Test chặn nếu ai viết dài lại.
 - Bảng màu theo cảnh giới (mỗi 50 mạng đổi một bậc, xem §12): ngọc bích `#2E8B6E` (未染) → đồng thau → son → huyết khô → gần đen `#360A15` (無間). Độ sáng giảm đều từng bậc nên **càng chết nhiều, thanh màu càng tối**; có test kiểm tra điều này.
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
 - Liên tử (chết trong vòng 90 s so với lần trước) → thêm dòng "ma khí nhập thể" và tiêu đề đổi hậu tố.
@@ -188,26 +190,26 @@ Mô phỏng bố cục:
 ```
 [ ảnh 1920x1080 — khung hình ngay TRƯỚC khi chữ DEAD hiện ]
 ┌───────────────────────────────────────────────┐
-│ Khí Tuyệt Lục                                      │  ← author
-│ 氣絕錄 · Tứ Chuyển · Nhập Ma                    │  ← title
-│ 🩸 Ma khí quấn thân, huyết vụ tản như khói    │  ← description
-│ nhang tàn. Ngươi ngã xuống — bia đá khắc thêm │
-│ một vết.                                      │
-│ ⚡ Chết lại quá nhanh — ma khí chưa kịp tản.  │  ← chỉ khi liên tử
-│ *ma khí đã vào gân cốt*                        │  ← trạng thái bậc, in nghiêng
+│ Khí Tuyệt Lục                            ╭────╮ │  ← author + số đếm
+│ 氣絕錄 · Tứ Chuyển · Nhập Ma             │ 47 │ │  ← title
+│ 🩸 Ma khí quấn thân, huyết vụ tàn như    ╰────╯ │  ← description
+│ khói nhang.                                   │
+│ ⚡ Ma khí chưa tản, ngươi đã quay lại.        │  ← chỉ khi liên tử
+│ *ma khí vào gân cốt*                          │  ← trạng thái bậc, in nghiêng
 │ 血 · Tử kỳ     │ 命 · Tổng kiếp │ 時 · Cách kiếp│  ← lưới 3×2
 │ #3             │ #47            │ 2 phút 41 s   │
 │ 境 · Cảnh giới  │ 連 · Liên tử   │ ◈ Phiên      │
 │ 未染 · Vô Nhiễm │ —              │ 15:02         │
-│ 氣絕錄 · đã khắc vào huyết thư · dxgi · 1920×1080│  ← footer (hiện trạng)
+│ 氣絕錄 · khắc huyết thư · dxgi · 1920×1080      │  ← footer (hiện trạng)
 └───────────────────────────────────────────────┘
 ```
 
 Quy tắc kỹ thuật:
 
 - Ảnh gửi bằng `discord.File` (attachment thường) **trước**, embed **sau** → Discord render ảnh ở trên, embed ở dưới. Không dùng `embed.set_image` (sẽ nhét ảnh xuống đáy embed).
-- Nếu kênh tắt ảnh: chỉ gửi embed.
-- Nếu event không có ảnh (tracker tắt screenshot): chỉ gửi embed, footer ghi chú "vô ảnh".
+- Ảnh số đếm (`ktl-count.png`) là attachment thứ nhất, embed trỏ tới bằng `set_thumbnail("attachment://ktl-count.png")`; ảnh chụp là attachment thứ hai. Ảnh số đếm luôn được gửi, kể cả khi kênh tắt ảnh chụp — vì nó là phần trang trí của embed, không phải ảnh minh hoạ.
+- Nếu kênh tắt ảnh chụp: chỉ gửi số đếm + embed.
+- Nếu event không có ảnh (tracker tắt screenshot): chỉ gửi số đếm + embed, footer ghi chú "vô ảnh".
 - Giới hạn cứng của Discord: title ≤ 256, description ≤ 4096, field value ≤ 1024, footer ≤ 2048, tổng ≤ 6000, ≤ 25 field. Bộ dựng embed phải tự cắt và có test.
 - `embed.timestamp` = thời điểm chết (UTC) để Discord hiện giờ tương đối.
 
@@ -219,22 +221,24 @@ Quy tắc kỹ thuật:
 bot code/bot/
 ├─ SPEC.md                  # tài liệu này
 ├─ README.md                # hướng dẫn deploy Render + UptimeRobot
-├─ requirements.txt         # discord.py, aiohttp
+├─ requirements.txt         # discord.py, aiohttp, Pillow
 ├─ render.yaml              # blueprint deploy 1 click
 ├─ .env.example
 ├─ run_local.bat            # chạy thử trên máy
 ├─ khi_tuyet_luc/
 │  ├─ __main__.py           # entrypoint: web server + bot, SIGTERM
 │  ├─ settings.py           # đọc env, validate
-│  ├─ texts.py              # kho câu thơ, Hán tự, bậc chuyển
+│  ├─ texts.py              # kho câu thơ ngắn, Hán tự, bậc chuyển, bảng màu
 │  ├─ event.py              # parse payload tracker + decode ảnh
+│  ├─ badge.py              # vẽ PNG số tổng kiếp (thumbnail góc phải, màu theo bậc)
 │  ├─ embed.py              # dựng embed kiếm hiệp
 │  ├─ store.py              # cấu hình: cache + message ghim Discord + env (neo linh hoạt)
-│  ├─ notify.py             # gửi tới nhiều kênh, chế độ ảnh, dựng payload xem trước
+│  ├─ notify.py             # gửi tới nhiều kênh, đính kèm số đếm + ảnh, dựng payload xem trước
 │  ├─ web.py                # aiohttp: /health, /, /api/deaths
 │  └─ commands.py           # 14 lệnh slash, mọi phản hồi là embed
 └─ tools/
-   ├─ test_embed.py         # test thuần offline: giới hạn embed, nội dung, cảnh giới
+   ├─ preview.py            # in bố cục embed ra console (kèm dòng số đếm ở góc)
+   ├─ test_embed.py         # test thuần offline: giới hạn embed, chữ ngắn, cảnh giới, ảnh số đếm
    ├─ test_notify.py        # nhiều kênh, chống trùng, liên tử, avatar, build_preview
    ├─ test_store.py         # neo cấu hình: ghim vào kênh thông báo, khôi phục sau mất cache
    └─ test_webhook.py       # test handler bằng aiohttp TestClient (không cần token)
@@ -259,8 +263,8 @@ bot code/bot/
 
 | Test | Nội dung |
 |---|---|
-| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; kèm lưu/đọc cấu hình |
-| `tools/test_notify.py` | Nhiều kênh, bật/tắt ảnh, chống trùng `id`, liên tử, lỗi quyền, avatar người chơi, và `build_preview()` (đúng embed, không gửi gì, không đổi số liệu) |
+| `tools/test_embed.py` | Dựng embed cho 6 tình huống (mới/liên tử/tổng lớn/không ảnh/không có số liệu/số cực lớn) → assert không vượt giới hạn Discord, đúng thứ tự field, đúng bậc màu, đúng số chữ Hán; chữ phải ngắn (câu thơ ≤ 52 ký tự, một dòng); ảnh số đếm là PNG, đổi màu theo bậc, bậc cuối vẫn sáng hơn màu thanh; kèm lưu/đọc cấu hình |
+| `tools/test_notify.py` | Nhiều kênh, bật/tắt ảnh chụp (ảnh số đếm luôn đi kèm), thứ tự attachment + `thumbnail = attachment://ktl-count.png`, chống trùng `id`, liên tử, lỗi quyền, avatar người chơi, và `build_preview()` (đúng embed, không gửi gì, không đổi số liệu) |
 | `tools/test_store.py` | Neo cấu hình: ghim vào kênh thông báo, không tạo kênh riêng, không sinh message trùng, khôi phục sau khi mất cache (quét pin), kênh tên cũ vẫn đọc được |
 | `tools/test_webhook.py` | aiohttp TestClient: token sai → 403; thiếu `id` → 400; chưa có kênh → 503; hợp lệ → 200 và ảnh base64 được decode đúng kích thước; body quá lớn → 413 |
 

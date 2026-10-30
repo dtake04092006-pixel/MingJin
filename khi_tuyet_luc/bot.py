@@ -17,6 +17,10 @@ log = logging.getLogger(__name__)
 
 FLUSH_INTERVAL_S = 60.0
 
+# View Channels + Manage Channels + Manage Messages + Send Messages
+# + Embed Links + Attach Files + Read Message History
+INVITE_PERMISSIONS = 125968
+
 
 class KhiTuyetLucBot(commands.Bot):
     def __init__(self, settings: Settings, store: ConfigStore) -> None:
@@ -30,31 +34,66 @@ class KhiTuyetLucBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         setup_commands(self)
+        # setup_hook chạy trước khi nối gateway nên chưa biết bot ở server nào;
+        # việc sync phải đợi READY mới quyết định được.
+        self.loop.create_task(self._sync_commands(), name="slash-sync")
+        self.loop.create_task(self._flush_loop(), name="config-flush")
+
+    def _invite_url(self, guild_id: int | None = None) -> str | None:
+        """Link mời bot có sẵn scope `bot` + `applications.commands`."""
+        app_id = self.application_id
+        if not app_id:
+            return None
+        url = (
+            "https://discord.com/api/oauth2/authorize"
+            f"?client_id={app_id}&permissions={INVITE_PERMISSIONS}"
+            "&scope=bot%20applications.commands"
+        )
+        if guild_id:
+            url += f"&guild_id={guild_id}&disable_guild_select=true"
+        return url
+
+    async def _sync_commands(self) -> None:
+        await self.wait_until_ready()
+        target = self.settings.guild_id
         try:
-            if self.settings.guild_id:
-                guild = discord.Object(id=self.settings.guild_id)
+            if target and all(g.id != target for g in self.guilds):
+                log.error(
+                    "bỏ qua đăng ký lệnh: bot chưa ở trong guild %s. Mời bot vào server: %s",
+                    target,
+                    self._invite_url(target) or "(không tạo được link mời)",
+                )
+                return
+            if target:
+                guild = discord.Object(id=target)
                 self.tree.copy_global_to(guild=guild)
                 synced = await self.tree.sync(guild=guild)
-                log.info("đăng ký %s slash command vào guild %s", len(synced), self.settings.guild_id)
+                log.info("đăng ký %s slash command vào guild %s", len(synced), target)
             else:
                 synced = await self.tree.sync()
                 log.info("đăng ký %s slash command toàn cục (có thể mất tới 1 giờ)", len(synced))
         except discord.Forbidden:
             log.error(
-                "đăng ký slash command bị chặn (403) — bot thiếu scope 'applications.commands' "
-                "hoặc chưa ở trong guild %s. Mời lại bot bằng link có scope "
-                "'bot applications.commands' rồi khởi động lại.",
-                self.settings.guild_id or "(toàn cục)",
+                "đăng ký slash command bị chặn (403) — thiếu scope 'applications.commands' "
+                "trong link mời. Mời lại bot bằng link này: %s",
+                self._invite_url(target) or "(không tạo được link)",
             )
         except discord.HTTPException:
             log.exception("đăng ký slash command thất bại")
-        self.loop.create_task(self._flush_loop(), name="config-flush")
 
     async def on_ready(self) -> None:
         log.info("đã đăng nhập: %s (guild: %s)", self.user, len(self.guilds))
+        if not self.guilds:
+            log.error(
+                "BOT CHƯA ĐƯỢC MỜI VÀO SERVER NÀO — mở link này bằng tài khoản admin "
+                "của server để thêm bot: %s",
+                self._invite_url(self.settings.guild_id) or "(không tạo được link mời)",
+            )
         for guild in self.guilds:
             log.info("  · đang ở server: %s (id %s)", guild.name, guild.id)
-        if self.settings.guild_id and all(g.id != self.settings.guild_id for g in self.guilds):
+        if self.guilds and self.settings.guild_id and all(
+            g.id != self.settings.guild_id for g in self.guilds
+        ):
             log.error(
                 "GUILD_ID=%s không có trong danh sách trên — bot chưa được mời vào server đó "
                 "hoặc ID sai. Sửa biến GUILD_ID hoặc mời bot vào đúng server.",

@@ -183,7 +183,7 @@ Nguyên tắc thị giác:
 - **Lưới field 3×2 thẳng hàng**: đúng 6 field, tất cả `inline=True` và **giá trị chỉ một dòng**. Tên field đều hai chữ (`血 · Tử kỳ`, `命 · Tổng kiếp`, `時 · Cách kiếp`, `境 · Cảnh giới`, `連 · Liên tử`, `◈ Phiên`) để ba cột rộng bằng nhau.
 - Field `境 · Cảnh giới` chỉ ghi nhãn bậc (`未染 · Vô Nhiễm`) — **không** hiện tiến độ kiểu `40/50 · còn 10 mạng → 染血`. Câu trạng thái của bậc chuyển xuống mô tả, in nghiêng.
 - Field `◈ Phiên` chỉ hiện thời lượng phiên (`15:02`), không nhét id phiên thô.
-- **Tiêu đề**: `氣絕錄 · <Chuyển thứ mấy> · <cảnh giới>`. "Chuyển" đếm theo **tổng kiếp của bot**, không theo tử kỳ của phiên tracker — nên khởi động lại tracker không kéo nó về 1; chỉ `/ktl deaths` mới đặt lại được. Số được đánh vần bằng Hán tự + âm Việt tới 9999 (`第四十七 · Tứ Thập Thất`), quá mốc đó mới ghi số Ả Rập. Field `血 · Tử kỳ` vẫn là số của tracker (theo phiên) để đối chiếu.
+- **Tiêu đề**: `氣絕錄 · <Chuyển thứ mấy> · <cảnh giới>`. "Chuyển" đếm theo **tổng kiếp của bot**, không theo số phiên của tracker — nên khởi động lại tracker không kéo nó về 1; chỉ `/ktl deaths` mới đặt lại được. Số được đánh vần bằng Hán tự + âm Việt tới 9999 (`第四十七 · Tứ Thập Thất`), quá mốc đó mới ghi số Ả Rập. Field `血 · Tử kỳ` = **số mạng đã chết trước lần này** (tổng kiếp − 1) nên nó và `命 · Tổng kiếp` **luôn chênh đúng 1**: `#39` / `#40`. Ảnh số đếm ở góc phải cũng chính là **kiếp đang chơi** (`#40`), không phải tử kỳ.
 - Bản thử (`/ktl test`, `/ktl preview`) trông **y hệt** bản thật: không có chữ "thử"/"test" ở footer hay phiên.
 
 Mô phỏng bố cục:
@@ -197,8 +197,8 @@ Mô phỏng bố cục:
 │ khói nhang.                                   │
 │ ⚡ Ma khí chưa tản, ngươi đã quay lại.        │  ← chỉ khi liên tử
 │ *ma khí vào gân cốt*                          │  ← trạng thái bậc, in nghiêng
-│ 血 · Tử kỳ     │ 命 · Tổng kiếp │ 時 · Cách kiếp│  ← lưới 3×2
-│ #3             │ #47            │ 2 phút 41 s   │
+│ 血 · Tử kỳ     │ 命 · Tổng kiếp │ 時 · Cách kiếp│  ← lưới 3×2 (tử kỳ = kiếp − 1)
+│ #46            │ #47            │ 2 phút 41 s   │
 │ 境 · Cảnh giới  │ 連 · Liên tử   │ ◈ Phiên      │
 │ 未染 · Vô Nhiễm │ —              │ 15:02         │
 │ 氣絕錄 · khắc huyết thư · dxgi · 1920×1080      │  ← footer (hiện trạng)
@@ -314,6 +314,8 @@ tổng kiếp = cfg.deaths_total          # admin đặt bằng /ktl deaths
 - Admin đặt lại bằng `/ktl deaths count:39`; đặt xong mọi thứ (màu, cảnh giới) đổi ngay từ lần chết kế.
 - Không dùng `event.total_deaths` của tracker để tính cảnh giới (tracker reset DB là về 0);
   con số đó vẫn hiện ở field `命 · Tổng kiếp` nếu bot chưa có số của mình.
+- Trong embed: `命 · Tổng kiếp` = `deaths_total + 1` (kiếp đang chơi, cũng là số trên ảnh góc phải),
+  `血 · Tử kỳ` = `deaths_total` (số mạng đã chết trước đó) → hai field luôn lệch đúng 1.
 
 ### 12.2 Thang cảnh giới — 15 bậc, mỗi bậc 50 mạng, dừng ở 700
 

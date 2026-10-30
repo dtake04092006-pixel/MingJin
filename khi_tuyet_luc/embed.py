@@ -137,7 +137,9 @@ def build_embed(
     else:
         embed.set_author(name=bot_name, icon_url=bot_avatar)
 
-    death_label = f"#{event.death_no}" if event.death_no else "—"
+    # 血 = số mạng đã chết TRƯỚC lần này; 命 = kiếp đang chơi. Hai field luôn chênh đúng 1.
+    base = total or event.death_no
+    death_label = f"#{max(0, base - 1)}" if base else "—"
     total_label = f"#{total}" if total else "—"
     # 6 field, cả 6 đều inline và đều một dòng → lưới 3×2 thẳng hàng.
     embed.add_field(name="血 · Tử kỳ", value=death_label, inline=True)

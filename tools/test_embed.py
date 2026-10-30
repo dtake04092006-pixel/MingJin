@@ -32,13 +32,15 @@ def main() -> int:
     check.ok("title có cảnh giới 未染", "未染" in data["title"], data["title"])
     check.eq("thứ tự 6 field", [f["name"] for f in data["fields"]], FIELD_ORDER)
     check.eq("cách kiếp trước = —", data["fields"][2]["value"], "—")
-    check.eq("tử kỳ = #1", data["fields"][0]["value"], "#1")
+    check.eq("lần đầu: tử kỳ #0, tổng kiếp #1", [data["fields"][0]["value"], data["fields"][1]["value"]], ["#0", "#1"])
 
     # 2. 47 mạng → vẫn 未染; field cảnh giới chỉ có nhãn bậc, một dòng
     embed = build_embed(make_event(death_no=3, total=47), verse=texts.VERSES[1])
     data = embed.to_dict()
     check.ok("title chứa 第四十七", "第四十七" in data["title"], data["title"])
     check.ok("title không dùng tử kỳ 第三", "第三 ·" not in data["title"], data["title"])
+    check.eq("tử kỳ = tổng kiếp − 1 = #46", data["fields"][0]["value"], "#46")
+    check.eq("tổng kiếp = #47", data["fields"][1]["value"], "#47")
     check.eq("màu 47 mạng = 未染", data["color"], 0x2E8B6E)
     check.eq("field cảnh giới = nhãn bậc", data["fields"][3]["value"], "未染 · Vô Nhiễm")
     check.ok("field cảnh giới KHÔNG có tiến độ 47/50", "47/50" not in data["fields"][3]["value"], data["fields"][3]["value"])
@@ -115,9 +117,20 @@ def main() -> int:
     check.eq("field tổng kiếp = #700", data["fields"][1]["value"], "#700")
     check.ok("title theo tổng kiếp: 第七百", "第七百" in data["title"], data["title"])
     check.ok("title KHÔNG lấy tử kỳ 第三", "第三" not in data["title"], data["title"])
-    check.eq("field tử kỳ vẫn của tracker = #3", data["fields"][0]["value"], "#3")
+    check.eq("field tử kỳ = tổng kiếp − 1 = #699", data["fields"][0]["value"], "#699")
     check.ok("title đọc được âm Việt", "Thất Bách Chuyển" in data["title"], data["title"])
     check.eq("bậc cuối vẫn một dòng", len(data["fields"][3]["value"].split("\n")), 1)
+
+    # 11. tử kỳ luôn chênh tổng kiếp đúng 1 mạng
+    gaps = []
+    for count in (1, 2, 47, 400, 700):
+        data = build_embed(make_event(death_no=1, total=count), verse=texts.VERSES[0]).to_dict()
+        gaps.append((data["fields"][0]["value"], data["fields"][1]["value"]))
+    check.eq(
+        "tử kỳ = tổng kiếp − 1 ở mọi mốc",
+        gaps,
+        [("#0", "#1"), ("#1", "#2"), ("#46", "#47"), ("#399", "#400"), ("#699", "#700")],
+    )
 
     print("\n=== Kho chữ ===")
     check.eq("turn 0", texts.turn_label(0), ("", ""))

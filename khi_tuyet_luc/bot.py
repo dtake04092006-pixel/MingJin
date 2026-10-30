@@ -53,9 +53,9 @@ class KhiTuyetLucBot(commands.Bot):
             url += f"&guild_id={guild_id}&disable_guild_select=true"
         return url
 
-    async def _sync_commands(self) -> None:
+    async def _sync_commands(self, guild_id: int | None = None) -> None:
         await self.wait_until_ready()
-        target = self.settings.guild_id
+        target = guild_id or self.settings.guild_id
         try:
             if target and all(g.id != target for g in self.guilds):
                 log.error(
@@ -108,6 +108,17 @@ class KhiTuyetLucBot(commands.Bot):
                 log.warning("chưa cấu hình kênh nào — chạy /ktl add trong server")
             if self.store._channel is not None and self.store._message is None:  # noqa: SLF001
                 await self.store.save()  # tạo message cấu hình nếu thiếu
+
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        """Vừa được mời vào server → đăng ký lại lệnh ngay, khỏi phải restart."""
+        log.info("được thêm vào server: %s (id %s)", guild.name, guild.id)
+        if self.settings.guild_id and guild.id != self.settings.guild_id:
+            log.warning(
+                "server vừa thêm (%s) khác GUILD_ID=%s — lệnh sẽ đăng ký ở server vừa thêm",
+                guild.id,
+                self.settings.guild_id,
+            )
+        self.loop.create_task(self._sync_commands(guild.id), name="slash-sync-on-join")
 
     async def _flush_loop(self) -> None:
         await self.wait_until_ready()

@@ -149,8 +149,10 @@ Thứ tự đọc khi khởi động:
 | `/ktl list` | — | bảng các kênh + chế độ ảnh + trạng thái |
 | `/ktl image` | `channel`, `mode` = `on`/`off`/`default` | ép chế độ ảnh cho 1 kênh |
 | `/ktl default-image` | `mode` = `on`/`off` | mặc định chung |
+| `/ktl deaths` | `count` (0–100000) | đặt tổng kiếp đã có trước khi dùng tool |
+| `/ktl player` | `member` (bỏ trống = xoá) | ghim người chơi: tên + avatar trong embed |
 | `/ktl test` | `channel` (tuỳ chọn) | gửi 1 thông báo mẫu để xem embed ngay |
-| `/ktl status` | — | cấu hình hiện tại + số event đã nhận + lần chết gần nhất |
+| `/ktl status` | — | cấu hình hiện tại + cảnh giới + người chơi + số event đã nhận |
 | `/ktl pause` | — | tạm ngưng thông báo (tracker vẫn được nhận) |
 | `/ktl resume` | — | chạy tiếp |
 
@@ -216,7 +218,7 @@ bot code/bot/
 │  ├─ store.py              # cấu hình: cache + message ghim Discord + env
 │  ├─ notify.py             # gửi tới nhiều kênh, chế độ ảnh
 │  ├─ web.py                # aiohttp: /health, /, /api/deaths
-│  └─ commands.py           # 9 lệnh slash
+│  └─ commands.py           # 12 lệnh slash
 └─ tools/
    ├─ test_embed.py         # test thuần offline: giới hạn embed, nội dung
    └─ test_webhook.py       # test handler bằng aiohttp TestClient (không cần token)
@@ -269,3 +271,54 @@ Chạy được trên máy, không cần kết nối Discord, không cần Rende
 4. Tắt bot 10 phút rồi bật lại → tracker đẩy hết event tồn trong outbox, không mất lần chết nào.
 5. `/ktl test` gửi được thông báo mẫu ngay.
 6. `python tools\test_embed.py` và `python tools\test_webhook.py` PASS 100%.
+
+---
+
+## 12. Cảnh giới theo tổng kiếp + người chơi (v1.1)
+
+### 12.1 Vì sao bot tự đếm
+
+Người chơi đã chết **39 lần trước khi có tool**, tracker chỉ biết số của riêng nó. Nên
+"tổng kiếp" là số của **bot**, không phải của tracker:
+
+```
+tổng kiếp = cfg.deaths_total          # admin đặt bằng /ktl deaths
+          + 1 mỗi lần gửi thành công  # note_death(), chỉ khi delivered > 0
+```
+
+- `deaths_total` nằm trong `BotConfig` → chết cùng message ghim, sống qua mọi deploy.
+- Admin đặt lại bằng `/ktl deaths count:39`; đặt xong mọi thứ (màu, cảnh giới) đổi ngay từ lần chết kế.
+- Không dùng `event.total_deaths` của tracker để tính cảnh giới (tracker reset DB là về 0);
+  con số đó vẫn hiện ở field `命 · Tổng kiếp` nếu bot chưa có số của mình.
+
+### 12.2 Thang cảnh giới — 50 mạng một bậc, dừng ở 500
+
+| Tổng kiếp | Hán | Việt | Trạng thái | Màu |
+|---|---|---|---|---|
+| 0–49 | 未染 | Vô Nhiễm | chưa vấy máu, tay còn sạch | `#4C7A6B` |
+| 50–99 | 染血 | Nhiễm Huyết | vết máu đầu tiên đã khô trên áo | `#6E7448` |
+| 100–149 | 傷痕 | Thương Ngân | thân đầy sẹo, bước chân đã chậm | `#7A6440` |
+| 150–199 | 煞氣 | Sát Khí | sát khí bốc lên, quỷ thần tránh xa | `#84502F` |
+| 200–249 | 血債 | Huyết Trái | nợ máu chồng lên nợ máu | `#8C3A22` |
+| 250–299 | 入魔 | Nhập Ma | ma khí đã vào gân cốt | `#971E1E` |
+| 300–349 | 業障 | Nghiệp Chướng | nghiệp cũ quấn lấy cổ chân | `#A21515` |
+| 350–399 | 幽途 | U Đồ | đường âm đã mở, chỉ một lối | `#AD0D0D` |
+| 400–449 | 輪迴 | Luân Hồi | chết rồi sống lại, quên cả tên mình | `#B80808` |
+| 450–499 | 修羅 | Tu La | sa vào tu la đạo, sát nghiệp không dứt | `#C70404` |
+| 500+ | 無間 | Vô Gián | vô gián địa ngục, không còn lối ra | `#D60000` |
+
+Màu embed = màu cảnh giới (đây là thứ duy nhất đổi theo tổng kiếp). Chết liên tiếp ≥5 lần
+vẫn ép màu đỏ tươi `#E01B1B` để báo "đang thua dồn dập" — ngoại lệ có chủ đích.
+
+Hiển thị trong embed: tiêu đề thêm Hán tự cảnh giới (`氣絕錄 · 第三 · Tam Chuyển · 無間`),
+field `境 · Cảnh giới` ghi `未染 · Vô Nhiễm` + trạng thái + `còn N mạng → 染血`.
+
+### 12.3 Người chơi
+
+- `/ktl player member:@ai` ghim người đang chơi; `/ktl player` (bỏ trống) để xoá.
+- `/ktl setup` tự gán người chơi = người gọi lệnh — đúng ý "ai setup thì hiện người đó".
+- Embed dùng **author** để hiện: tên hiển thị + avatar Discord của người chơi.
+  Bot name/avatar chỉ dùng khi chưa gán ai.
+- Lưu `{"id", "name", "avatar"}`; khi gửi thì lấy avatar tươi từ cache Discord
+  (link CDN có chữ ký hết hạn), nếu không có cache mới dùng ảnh đã lưu.
+

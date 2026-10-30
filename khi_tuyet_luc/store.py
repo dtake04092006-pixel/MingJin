@@ -32,6 +32,25 @@ class StoreError(RuntimeError):
     pass
 
 
+def _parse_player(raw: object) -> dict | None:
+    """Chỉ nhận {"id": int, "name": str, "avatar": str|None} — bỏ mọi thứ khác."""
+    if not isinstance(raw, dict):
+        return None
+    try:
+        player_id = int(raw.get("id") or 0)
+    except (TypeError, ValueError):
+        return None
+    name = raw.get("name")
+    if not player_id or not isinstance(name, str) or not name.strip():
+        return None
+    avatar = raw.get("avatar")
+    return {
+        "id": player_id,
+        "name": name.strip()[:64],
+        "avatar": avatar[:200] if isinstance(avatar, str) else None,
+    }
+
+
 @dataclass
 class BotConfig:
     version: int = 1
@@ -40,6 +59,8 @@ class BotConfig:
     channels: dict[str, dict] = field(default_factory=dict)
     streak: int = 1
     stats: dict = field(default_factory=dict)
+    deaths_total: int = 0
+    player: dict | None = None
 
     # --- truy vấn -------------------------------------------------------
     def image_for(self, channel_id: int | str) -> bool:
@@ -63,6 +84,13 @@ class BotConfig:
         self.stats["last_id"] = event_id
         self.stats["last_death_utc"] = ts_utc
         self.streak = streak
+        self.deaths_total = max(0, int(self.deaths_total or 0)) + 1
+
+    @property
+    def player_name(self) -> str | None:
+        if not self.player:
+            return None
+        return self.player.get("name") or None
 
     # --- (de)serialize --------------------------------------------------
     def to_dict(self) -> dict:
@@ -73,6 +101,8 @@ class BotConfig:
             "channels": self.channels,
             "streak": int(self.streak),
             "stats": self.stats,
+            "deaths_total": int(self.deaths_total),
+            "player": self.player,
         }
 
     @classmethod
@@ -92,6 +122,8 @@ class BotConfig:
                 channels[str(channel_id)] = {"image": override if isinstance(override, bool) else None}
         stats = raw.get("stats") if isinstance(raw.get("stats"), dict) else {}
         streak = raw.get("streak")
+        deaths = raw.get("deaths_total")
+        deaths_total = deaths if isinstance(deaths, int) and not isinstance(deaths, bool) and deaths >= 0 else 0
         return cls(
             version=int(raw.get("version") or 1),
             default_image=bool(raw.get("default_image", True)),
@@ -99,6 +131,8 @@ class BotConfig:
             channels=channels,
             streak=int(streak) if isinstance(streak, int) and streak >= 1 else 1,
             stats=stats,
+            deaths_total=int(deaths_total),
+            player=_parse_player(raw.get("player")),
         )
 
     def describe(self) -> str:
@@ -183,6 +217,24 @@ class ConfigStore:
 
     def set_paused(self, value: bool) -> None:
         self._cfg.paused = value
+
+    def set_deaths(self, value: int) -> None:
+        """Đặt lại tổng kiếp (dùng khi đã chết nhiều lần trước khi có tool)."""
+        self._cfg.deaths_total = max(0, int(value))
+        self._dirty = True
+
+    def set_player(self, member: discord.abc.User | None) -> None:
+        if member is None:
+            self._cfg.player = None
+        else:
+            self._cfg.player = _parse_player(
+                {
+                    "id": member.id,
+                    "name": getattr(member, "display_name", None) or member.name,
+                    "avatar": member.display_avatar.url if member.display_avatar else None,
+                }
+            )
+        self._dirty = True
 
     def note_death(self, event_id: str, ts_utc: str, streak: int) -> None:
         self._cfg.note_death(event_id, ts_utc, streak)

@@ -39,18 +39,37 @@ TURNS_CN: tuple[str, ...] = ("第一", "第二", "第三", "第四", "第五", "
 TURNS_VI: tuple[str, ...] = ("Nhất", "Nhị", "Tam", "Tứ", "Ngũ", "Lục", "Thất", "Bát", "Cửu", "Thập")
 
 
+REALM_STEP = 50
+REALM_MAX = 500  # mốc 無間 — quá mốc này thì đứng yên
+
+
 @dataclass(frozen=True, slots=True)
-class Tier:
+class Realm:
+    """Một bậc cảnh giới, tính theo tổng kiếp do bot tự đếm."""
+
+    index: int
+    cn: str
+    vi: str
+    status: str
     colour: int
-    name: str
-    suffix: str
+
+    @property
+    def label(self) -> str:
+        return f"{self.cn} · {self.vi}"
 
 
-TIERS: tuple[Tier, ...] = (
-    Tier(0x7B0C0C, "Huyết khí sơ sinh", ""),
-    Tier(0x9B0F0F, "Huyết khí dày", ""),
-    Tier(0xB81313, "Sát khí quanh thân", ""),
-    Tier(0xD41A1A, "Nhập Ma", " · 入魔"),
+REALMS: tuple[Realm, ...] = (
+    Realm(0, "未染", "Vô Nhiễm", "chưa vấy máu, tay còn sạch", 0x4C7A6B),
+    Realm(1, "染血", "Nhiễm Huyết", "vết máu đầu tiên đã khô trên áo", 0x6E7448),
+    Realm(2, "傷痕", "Thương Ngân", "thân đầy sẹo, bước chân đã chậm", 0x7A6440),
+    Realm(3, "煞氣", "Sát Khí", "sát khí bốc lên, quỷ thần tránh xa", 0x84502F),
+    Realm(4, "血債", "Huyết Trái", "nợ máu chồng lên nợ máu", 0x8C3A22),
+    Realm(5, "入魔", "Nhập Ma", "ma khí đã vào gân cốt", 0x971E1E),
+    Realm(6, "業障", "Nghiệp Chướng", "nghiệp cũ quấn lấy cổ chân", 0xA21515),
+    Realm(7, "幽途", "U Đồ", "đường âm đã mở, chỉ một lối", 0xAD0D0D),
+    Realm(8, "輪迴", "Luân Hồi", "chết rồi sống lại, quên cả tên mình", 0xB80808),
+    Realm(9, "修羅", "Tu La", "sa vào tu la đạo, sát nghiệp không dứt", 0xC70404),
+    Realm(10, "無間", "Vô Gián", "vô gián địa ngục, không còn lối ra", 0xD60000),
 )
 
 STREAK_TITLES = {3: " · 連死", 5: " · 五連", 7: " · 七連"}
@@ -66,15 +85,26 @@ def turn_label(death_no: int | None) -> tuple[str, str]:
     return TURNS_CN[index], TURNS_VI[index]
 
 
-def tier_for(total_deaths: int | None) -> Tier:
-    total = total_deaths or 0
-    if total >= 25:
-        return TIERS[3]
-    if total >= 10:
-        return TIERS[2]
-    if total >= 5:
-        return TIERS[1]
-    return TIERS[0]
+def realm_for(total_deaths: int | None) -> Realm:
+    """Bậc cảnh giới theo tổng kiếp; quá 500 thì đứng ở 無間."""
+    total = max(0, int(total_deaths or 0))
+    return REALMS[min(total // REALM_STEP, len(REALMS) - 1)]
+
+
+def next_realm(total_deaths: int | None) -> Realm | None:
+    realm = realm_for(total_deaths)
+    if realm.index >= len(REALMS) - 1:
+        return None
+    return REALMS[realm.index + 1]
+
+
+def realm_progress(total_deaths: int | None) -> tuple[int, int]:
+    """(đã chết được mấy mạng trong bậc, mốc của bậc kế). Bậc cuối → (0, 0)."""
+    total = max(0, int(total_deaths or 0))
+    realm = realm_for(total)
+    if realm.index >= len(REALMS) - 1:
+        return 0, 0
+    return total - realm.index * REALM_STEP, (realm.index + 1) * REALM_STEP
 
 
 def streak_suffix(streak: int) -> str:

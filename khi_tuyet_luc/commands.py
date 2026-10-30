@@ -5,6 +5,7 @@ from __future__ import annotations
 import discord
 from discord import app_commands
 
+from . import texts
 from .store import MAX_CHANNELS, ConfigStore
 
 MODE_ON = "on"
@@ -66,7 +67,9 @@ def build_group() -> app_commands.Group:
         store = _store(interaction)
         try:
             channel = await store.ensure_channel(guild)
-            saved = await store.save(force=True)
+            if interaction.user is not None:
+                store.set_player(interaction.user)
+            saved = await store.save()
         except discord.Forbidden:
             await interaction.followup.send(
                 "Bot thiếu quyền **Quản lý kênh** để tạo `#khi-tuyet-luc-config`.", ephemeral=True
@@ -76,13 +79,50 @@ def build_group() -> app_commands.Group:
             await interaction.followup.send(f"Discord từ chối: {exc.status} {exc.text[:80]}", ephemeral=True)
             return
 
+        cfg = store.config
+        realm = texts.realm_for(cfg.deaths_total)
         lines = [
             f"Đã sẵn sàng. Cấu hình lưu tại {channel.mention}.",
             "Đừng xoá message ghim ở đó — đó là nơi giữ cấu hình qua các lần deploy.",
+            f"Người chơi: **{cfg.player_name or '—'}** · tổng kiếp #{cfg.deaths_total} · cảnh giới {realm.label}.",
             f"Lưu lên Discord: {'thành công' if saved else 'chưa được, đang dùng cache cục bộ'}.",
+            "Đã chết nhiều lần trước khi có tool? Đặt lại bằng `/ktl deaths`.",
             "Tiếp theo: `/ktl add` để chọn kênh nhận thông báo.",
         ]
         await interaction.followup.send("\n".join(lines), ephemeral=True)
+
+    @group.command(name="deaths", description="Đặt tổng kiếp đã có từ trước (cảnh giới tính theo số này)")
+    @app_commands.describe(count="Tổng số lần chết tính từ đầu, ví dụ 39")
+    async def deaths_cmd(interaction: discord.Interaction, count: app_commands.Range[int, 0, 100000]) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        store = _store(interaction)
+        store.set_deaths(int(count))
+        await store.save()
+        total = store.config.deaths_total
+        realm = texts.realm_for(total)
+        nxt = texts.next_realm(total)
+        if nxt is None:
+            tail = "đã ở bậc cuối, không còn bậc nào tệ hơn"
+        else:
+            tail = f"còn {nxt.index * texts.REALM_STEP - total} mạng → {nxt.cn}"
+        await interaction.followup.send(
+            f"Tổng kiếp: **#{total}** · cảnh giới **{realm.label}** ({realm.status}) · {tail}.", ephemeral=True
+        )
+
+    @group.command(name="player", description="Ghim người đang chơi — tên và avatar hiện trong embed")
+    @app_commands.describe(member="Người chơi (bỏ trống = xoá, embed dùng tên bot)")
+    async def player_cmd(interaction: discord.Interaction, member: discord.Member | None = None) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        store = _store(interaction)
+        store.set_player(member)
+        await store.save()
+        if member is None:
+            await interaction.followup.send("Đã xoá người chơi.", ephemeral=True)
+        else:
+            await interaction.followup.send(
+                f"Người chơi: **{member.display_name}** ({member.mention}) — avatar của họ sẽ hiện cạnh tên trong embed.",
+                ephemeral=True,
+            )
 
     @group.command(name="add", description="Thêm kênh nhận thông báo tử vong")
     @app_commands.describe(channel="Kênh sẽ nhận thông báo", image="Ép chế độ ảnh cho kênh này (bỏ trống = theo mặc định)")
@@ -185,10 +225,18 @@ def build_group() -> app_commands.Group:
         store = _store(interaction)
         cfg = store.config
         state = getattr(interaction.client, "web_state", None)
+        realm = texts.realm_for(cfg.deaths_total)
+        nxt = texts.next_realm(cfg.deaths_total)
+        if nxt is None:
+            realm_tail = "bậc cuối"
+        else:
+            realm_tail = f"còn {nxt.index * texts.REALM_STEP - cfg.deaths_total} mạng → {nxt.cn}"
         lines = [
             "**氣絕錄 · Khí Tuyệt Lục**",
             f"kênh: {len(cfg.channels)}/{MAX_CHANNELS} · mặc định {'ảnh' if cfg.default_image else 'không ảnh'}",
             f"trạng thái: {'tạm ngưng' if cfg.paused else 'đang chạy'}",
+            f"tổng kiếp: #{cfg.deaths_total} · cảnh giới: {realm.label} ({realm_tail})",
+            f"người chơi: {cfg.player_name or '—'}",
             f"cấu hình đọc từ: {store.describe_source()}",
             f"đã nhận: {cfg.stats.get('received', 0)} lần chết",
             f"lần cuối: {cfg.stats.get('last_death_utc', '—')}",

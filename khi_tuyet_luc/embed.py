@@ -63,8 +63,7 @@ def validate_embed(embed: discord.Embed) -> None:
         raise ValueError("embed vượt giới hạn Discord: " + ", ".join(problems))
 
 
-def _title(event: DeathEvent, streak: int) -> str:
-    tier = texts.tier_for(event.total_deaths)
+def _title(event: DeathEvent, streak: int, realm: texts.Realm) -> str:
     cn, vi = texts.turn_label(event.death_no)
     if cn:
         turn = f"{cn} · {vi} Chuyển"
@@ -72,7 +71,20 @@ def _title(event: DeathEvent, streak: int) -> str:
         turn = f"{vi} Chuyển"
     else:
         turn = "Vô danh chuyển"
-    return _clip(f"氣絕錄 · {turn}{tier.suffix}{texts.streak_suffix(streak)}", MAX_TITLE)
+    return _clip(f"氣絕錄 · {turn} · {realm.cn}{texts.streak_suffix(streak)}", MAX_TITLE)
+
+
+def _realm_value(total: int) -> str:
+    """'未染 · Vô Nhiễm' + trạng thái + tiến độ tới bậc kế."""
+    realm = texts.realm_for(total)
+    lines = [realm.label, realm.status]
+    nxt = texts.next_realm(total)
+    if nxt is None:
+        lines.append(f"{total} · đã tột cùng")
+    else:
+        _done, mark = texts.realm_progress(total)
+        lines.append(f"{total}/{mark} · còn {mark - total} mạng → {nxt.cn}")
+    return "\n".join(lines)
 
 
 def _description(verse: str, streak_line: str | None) -> str:
@@ -105,22 +117,29 @@ def build_embed(
     streak: int = 1,
     streak_line: str | None = None,
     test: bool = False,
+    lifetime: int | None = None,
+    player: dict | None = None,
+    player_avatar: str | None = None,
     bot_name: str = "Khí Tuyệt Lục",
     bot_avatar: str | None = None,
 ) -> discord.Embed:
-    tier = texts.tier_for(event.total_deaths)
-    colour = STREAK_COLOUR_OVERRIDE if streak >= STREAK_COLOUR_THRESHOLD else tier.colour
+    total = lifetime if lifetime is not None else (event.total_deaths or 0)
+    realm = texts.realm_for(total)
+    colour = STREAK_COLOUR_OVERRIDE if streak >= STREAK_COLOUR_THRESHOLD else realm.colour
 
     embed = discord.Embed(
-        title=_title(event, streak),
+        title=_title(event, streak, realm),
         description=_description(verse, streak_line),
         colour=discord.Colour(colour),
         timestamp=event.ts_utc,
     )
-    embed.set_author(name=bot_name, icon_url=bot_avatar)
+    if player:
+        embed.set_author(name=player.get("name") or bot_name, icon_url=player_avatar or player.get("avatar"))
+    else:
+        embed.set_author(name=bot_name, icon_url=bot_avatar)
 
     death_label = f"#{event.death_no}" if event.death_no else "—"
-    total_label = f"#{event.total_deaths}" if event.total_deaths else "—"
+    total_label = f"#{total}" if total else "—"
     embed.add_field(name="血 · Tử kỳ", value=death_label, inline=True)
     embed.add_field(name="命 · Tổng kiếp", value=total_label, inline=True)
     embed.add_field(
@@ -128,7 +147,7 @@ def build_embed(
         value=_clip(texts.format_duration(event.seconds_since_prev), MAX_FIELD_VALUE),
         inline=True,
     )
-    embed.add_field(name="煞 · Ma khí", value=_clip(tier.name, MAX_FIELD_VALUE), inline=True)
+    embed.add_field(name="境 · Cảnh giới", value=_clip(_realm_value(total), MAX_FIELD_VALUE), inline=True)
     session = texts.format_elapsed(event.session_elapsed_s)
     if event.session_id and session != "—":
         session_value = f"{_clip(event.session_id, 32)} · {session}"

@@ -61,6 +61,17 @@ class Notifier:
             return previous + 1
         return 1
 
+    # --- người chơi -----------------------------------------------------
+    def _player_identity(self, player: dict | None) -> tuple[dict | None, str | None]:
+        """(player, avatar tươi). Link CDN có chữ ký nên phải lấy lại từ cache."""
+        if not player:
+            return None, None
+        try:
+            user = self._bot.get_user(int(player.get("id") or 0))
+        except (TypeError, ValueError):
+            user = None
+        return player, (user.display_avatar.url if user else None)
+
     # --- dispatch -------------------------------------------------------
     async def dispatch(self, event: DeathEvent) -> Delivery:
         cfg = self._store.config
@@ -76,11 +87,16 @@ class Notifier:
         streak = self._next_streak(event)
         verse = self._picker.pick()
         streak_line = self._picker.streak_line() if streak >= 3 else None
+        # +1 vì lần chết này chưa được note_death() ghi vào tổng kiếp
+        lifetime = int(cfg.deaths_total or 0) + 1
+        player, player_avatar = self._player_identity(cfg.player)
         result = Delivery()
 
         for channel_id in cfg.channel_ids():
             with_image = self._store.image_for(channel_id)
-            error = await self._send_one(channel_id, event, with_image, verse, streak, streak_line)
+            error = await self._send_one(
+                channel_id, event, with_image, verse, streak, streak_line, lifetime, player, player_avatar
+            )
             if error is None:
                 result.delivered += 1
             else:
@@ -109,6 +125,9 @@ class Notifier:
         verse: str,
         streak: int,
         streak_line: str | None,
+        lifetime: int | None = None,
+        player: dict | None = None,
+        player_avatar: str | None = None,
     ) -> str | None:
         channel = await self._resolve_channel(channel_id)
         if channel is None:
@@ -124,6 +143,9 @@ class Notifier:
                 streak=streak,
                 streak_line=streak_line,
                 test=event.is_test,
+                lifetime=lifetime,
+                player=player,
+                player_avatar=player_avatar,
                 bot_avatar=avatar,
             )
         except ValueError as exc:
@@ -149,7 +171,9 @@ class Notifier:
 
     async def send_test(self, channel_id: int) -> str | None:
         """Gửi 1 thông báo mẫu; không đụng tới streak/thống kê thật."""
-        event = DeathEvent.sample(death_no=3, total=47)
+        cfg = self._store.config
+        event = DeathEvent.sample(death_no=3, total=int(cfg.deaths_total or 0) + 1)
+        player, avatar = self._player_identity(cfg.player)
         return await self._send_one(
             channel_id,
             event,
@@ -157,4 +181,7 @@ class Notifier:
             self._picker.pick(),
             1,
             None,
+            int(cfg.deaths_total or 0) + 1,
+            player,
+            avatar,
         )

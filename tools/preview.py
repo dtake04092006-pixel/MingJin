@@ -1,7 +1,8 @@
 """In trước nội dung embed ra console để xem nhanh mà không cần Discord.
 
 Chạy: python tools/preview.py            (mặc định: lần chết thứ 3, tổng 47)
-      python tools/preview.py 12 120     (lần chết thứ 12, tổng 120 → tầng Nhập Ma)
+      python tools/preview.py 12 120     (lần chết thứ 12, tổng 120 → 傷痕)
+      python tools/preview.py 3 520      (tổng 520 → 無間)
 """
 
 from __future__ import annotations
@@ -38,11 +39,14 @@ def main() -> int:
     streak = int(sys.argv[3]) if len(sys.argv) > 3 else 1
 
     event = make_event(death_no=death_no, total=total)
+    hero = {"id": 1, "name": "Tanya · người chơi", "avatar": "https://cdn.discord/avatar.png"}
     embed = build_embed(
         event,
         verse=texts.VERSES[1],
         streak=streak,
         streak_line=texts.STREAK_VERSES[0] if streak >= 3 else None,
+        lifetime=total,
+        player=hero,
     )
     data = embed.to_dict()
     width = 62
@@ -61,7 +65,13 @@ def main() -> int:
     for start in range(0, len(fields), 3):
         row = fields[start : start + 3]
         print("│ " + "".join(f["name"].ljust(21) for f in row).ljust(width + 1) + "│")
-        print("│ " + "".join(f["value"][:20].ljust(21) for f in row).ljust(width + 1) + "│")
+        depth = max(len(f["value"].splitlines()) for f in row)
+        for index in range(depth):
+            cells = []
+            for field in row:
+                lines = field["value"].splitlines()
+                cells.append(lines[index][:20].ljust(21) if index < len(lines) else " " * 21)
+            print("│ " + "".join(cells).ljust(width + 1) + "│")
         print("│ " + " " * (width + 1) + "│")
     print("│ " + data["footer"]["text"].ljust(width + 1) + "│")
     print("└" + "─" * (width + 2) + "┘\n")

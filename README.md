@@ -157,6 +157,8 @@ Gõ trong server (cần quyền Quản lý máy chủ):
 /ktl setup                 ← tạo #khi-tuyet-luc-config, ghim cấu hình (LÀM ĐẦU TIÊN)
 /ktl add channel:#huyết-thư
 /ktl add channel:#nhật-ký image:false
+/ktl deaths count:39        ← đặt tổng kiếp đã có trước khi dùng tool
+/ktl player member:@tên     ← tên + avatar hiện trong embed (bỏ trống = xoá)
 /ktl test                  ← xem thử embed + ảnh
 /ktl list
 /ktl image channel:#nhật-ký mode:on
@@ -215,7 +217,7 @@ khi_tuyet_luc/
   store.py      cấu hình: cache + message ghim Discord + env
   notify.py     gửi tới nhiều kênh, chế độ ảnh, chống trùng id, tính liên tử
   web.py        aiohttp: /health, /, /api/deaths
-  commands.py   10 lệnh slash
+  commands.py   12 lệnh slash
   bot.py        lớp Bot, đồng bộ slash command, flush cấu hình định kỳ
 tools/
   _common.py, test_embed.py, test_notify.py, test_webhook.py

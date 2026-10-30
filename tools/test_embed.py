@@ -14,7 +14,7 @@ from khi_tuyet_luc import texts  # noqa: E402
 from khi_tuyet_luc.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
 from khi_tuyet_luc.store import MARKER, BotConfig, parse_message, render_message  # noqa: E402
 
-FIELD_ORDER = ["血 · Tử kỳ", "命 · Tổng kiếp", "時 · Cách kiếp trước", "煞 · Ma khí", "◈ Phiên", "連 · Liên tử"]
+FIELD_ORDER = ["血 · Tử kỳ", "命 · Tổng kiếp", "時 · Cách kiếp trước", "境 · Cảnh giới", "◈ Phiên", "連 · Liên tử"]
 
 
 def main() -> int:
@@ -25,19 +25,20 @@ def main() -> int:
     embed = build_embed(event, verse=texts.VERSES[0])
     data = embed.to_dict()
     check.ok("title chứa 第一", "第一" in data["title"], data["title"])
-    check.eq("màu tầng thấp nhất", data["color"], 0x7B0C0C)
-    check.eq("không có hậu tố nhập ma", "入魔" in data["title"], False)
+    check.eq("màu cảnh giới 未染", data["color"], 0x4C7A6B)
+    check.ok("title có cảnh giới 未染", "未染" in data["title"], data["title"])
     check.eq("thứ tự 6 field", [f["name"] for f in data["fields"]], FIELD_ORDER)
     check.eq("cách kiếp trước = —", data["fields"][2]["value"], "—")
     check.eq("tử kỳ = #1", data["fields"][0]["value"], "#1")
 
-    # 2. tầng nhập ma
+    # 2. 47 mạng → vẫn 未染, còn 3 mạng tới 染血
     embed = build_embed(make_event(death_no=3, total=47), verse=texts.VERSES[1])
     data = embed.to_dict()
     check.ok("title có 第三", "第三" in data["title"], data["title"])
-    check.ok("title có 入魔", "入魔" in data["title"], data["title"])
-    check.eq("màu nhập ma", data["color"], 0xD41A1A)
-    check.eq("ma khí field", data["fields"][3]["value"], "Nhập Ma")
+    check.eq("màu 47 mạng = 未染", data["color"], 0x4C7A6B)
+    check.ok("field cảnh giới có 未染 · Vô Nhiễm", "未染 · Vô Nhiễm" in data["fields"][3]["value"], data["fields"][3]["value"])
+    check.ok("field cảnh giới có tiến độ 47/50", "47/50" in data["fields"][3]["value"], data["fields"][3]["value"])
+    check.ok("còn 3 mạng tới 染血", "còn 3 mạng → 染血" in data["fields"][3]["value"], data["fields"][3]["value"])
 
     # 3. không có ảnh
     embed = build_embed(make_event(with_image=False), verse=texts.VERSES[2])
@@ -85,15 +86,46 @@ def main() -> int:
     embed = build_embed(blank, verse=texts.VERSES[7])
     check.ok("event trống vẫn dựng được", "Vô danh chuyển" in embed.to_dict()["title"], embed.to_dict()["title"])
 
+    # 9. người chơi: author = tên hiển thị + avatar
+    hero = {"id": 42, "name": "Tanya", "avatar": "https://cdn.discord/old.png"}
+    embed = build_embed(
+        make_event(total=47), verse=texts.VERSES[8], player=hero, player_avatar="https://cdn.discord/fresh.png"
+    )
+    data = embed.to_dict()
+    check.eq("author = tên người chơi", data["author"]["name"], "Tanya")
+    check.eq("author icon = avatar tươi", data["author"]["icon_url"], "https://cdn.discord/fresh.png")
+    embed = build_embed(make_event(total=47), verse=texts.VERSES[8], player=hero)
+    check.eq("không có avatar tươi → ảnh đã lưu", embed.to_dict()["author"]["icon_url"], "https://cdn.discord/old.png")
+    embed = build_embed(make_event(total=47), verse=texts.VERSES[8])
+    check.eq("chưa gán người chơi → tên bot", embed.to_dict()["author"]["name"], "Khí Tuyệt Lục")
+
+    # 10. tổng kiếp của bot thắng số của tracker
+    embed = build_embed(make_event(death_no=3, total=1), verse=texts.VERSES[9], lifetime=520)
+    data = embed.to_dict()
+    check.eq("lifetime 520 → màu 無間", data["color"], 0xD60000)
+    check.eq("field tổng kiếp = #520", data["fields"][1]["value"], "#520")
+    check.ok("bậc cuối ghi 'đã tột cùng'", "đã tột cùng" in data["fields"][3]["value"], data["fields"][3]["value"])
+
     print("\n=== Kho chữ ===")
     check.eq("turn 1", texts.turn_label(1), ("第一", "Nhất"))
     check.eq("turn 10", texts.turn_label(10), ("第十", "Thập"))
     check.eq("turn 11", texts.turn_label(11), ("", "11"))
     check.eq("turn 0", texts.turn_label(0), ("", ""))
-    check.eq("tier 4 → tầng 1", texts.tier_for(4).colour, 0x7B0C0C)
-    check.eq("tier 5 → tầng 2", texts.tier_for(5).colour, 0x9B0F0F)
-    check.eq("tier 10 → tầng 3", texts.tier_for(10).colour, 0xB81313)
-    check.eq("tier 25 → tầng 4", texts.tier_for(25).colour, 0xD41A1A)
+    print("\n=== Cảnh giới (50 mạng/bậc, dừng ở 500) ===")
+    check.eq("0 mạng → 未染", texts.realm_for(0).cn, "未染")
+    check.eq("39 mạng → 未染", texts.realm_for(39).cn, "未染")
+    check.eq("49 mạng → 未染", texts.realm_for(49).cn, "未染")
+    check.eq("50 mạng → 染血", texts.realm_for(50).cn, "染血")
+    check.eq("99 mạng → 染血", texts.realm_for(99).cn, "染血")
+    check.eq("250 mạng → 入魔", texts.realm_for(250).cn, "入魔")
+    check.eq("499 mạng → 修羅", texts.realm_for(499).cn, "修羅")
+    check.eq("500 mạng → 無間", texts.realm_for(500).cn, "無間")
+    check.eq("9999 mạng vẫn 無間", texts.realm_for(9999).cn, "無間")
+    check.eq("None → 未染", texts.realm_for(None).cn, "未染")
+    check.eq("bậc cuối không có bậc kế", texts.next_realm(500), None)
+    check.eq("bậc kế của 39 mạng", texts.next_realm(39).cn, "染血")
+    check.eq("tiến độ 39 mạng", texts.realm_progress(39), (39, 50))
+    check.eq("tiến độ bậc cuối", texts.realm_progress(520), (0, 0))
     check.eq("thời lượng 161s", texts.format_duration(161.4), "2 phút 41 giây")
     check.eq("thời lượng 60s", texts.format_duration(60), "1 phút")
     check.eq("thời lượng 3725s", texts.format_duration(3725), "1 giờ 2 phút")

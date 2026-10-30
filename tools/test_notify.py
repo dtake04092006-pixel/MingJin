@@ -112,6 +112,48 @@ def main() -> int:
     check.ok("send_test ghi 'thông báo thử'", "thông báo thử" in channels[0].embeds[0].to_dict()["footer"]["text"])
     check.ok("send_test không đổi stats", not store.config.stats.get("received"), str(store.config.stats))
 
+    # 11. tổng kiếp tự tăng, cảnh giới đổi theo số của bot
+    bot, store, channels, notifier = build([(4040, None)])
+    store.add_channel(4040, None)
+    store.set_deaths(39)
+    asyncio.run(notifier.dispatch(make_event(event_id="r1", total=1)))
+    check.eq("39 → lần chết thứ 40", store.config.deaths_total, 40)
+    root = channels[0].embeds[0].to_dict()
+    check.eq("embed ghi tổng kiếp #40", root["fields"][1]["value"], "#40")
+    check.ok("40 mạng vẫn 未染", "未染" in root["title"], root["title"])
+    store.set_deaths(49)
+    asyncio.run(notifier.dispatch(make_event(event_id="r2", total=1)))
+    top = channels[0].embeds[1].to_dict()
+    check.eq("chết lần 50 → màu 染血", top["color"], 0x6E7448)
+    check.ok("title có 染血", "染血" in top["title"], top["title"])
+    check.eq("deaths_total = 50", store.config.deaths_total, 50)
+
+    # 12. người chơi hiện ở author: ảnh tươi từ cache, fallback ảnh đã lưu
+    bot, store, channels, notifier = build([(5050, None)])
+    store.add_channel(5050, None)
+    member = type(
+        "U",
+        (),
+        {
+            "id": 7,
+            "name": "tanya",
+            "display_name": "Tanya",
+            "display_avatar": type("A", (), {"url": "https://cdn/luu.png"})(),
+        },
+    )()
+    store.set_player(member)
+    asyncio.run(notifier.dispatch(make_event(event_id="p1")))
+    author = channels[0].embeds[0].to_dict()["author"]
+    check.eq("author name = người chơi", author["name"], "Tanya")
+    check.eq("không có cache → avatar đã lưu", author["icon_url"], "https://cdn/luu.png")
+    bot.users[7] = type("U2", (), {"display_avatar": type("A", (), {"url": "https://cdn/tuoi.png"})()})()
+    asyncio.run(notifier.dispatch(make_event(event_id="p2")))
+    check.eq("có cache → avatar tươi", channels[0].embeds[1].to_dict()["author"]["icon_url"], "https://cdn/tuoi.png")
+    store.set_player(None)
+    asyncio.run(notifier.dispatch(make_event(event_id="p3")))
+    check.eq("xoá người chơi → tên bot", channels[0].embeds[2].to_dict()["author"]["name"], "Khí Tuyệt Lục")
+    check.ok("set_player(None) xoá sạch", store.config.player is None, str(store.config.player))
+
     return check.summary()
 
 

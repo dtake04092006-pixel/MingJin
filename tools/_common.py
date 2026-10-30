@@ -137,9 +137,14 @@ class FakeBot:
             id=999, __str__=lambda self: "Khí Tuyệt Lục#0001", display_avatar=SimpleNamespace(url="https://x/y.png")
         )
         self.guilds: list = []
+        self.users: dict[int, object] = {}
 
     def get_channel(self, channel_id: int):
         return self._channels.get(channel_id)
+
+    def get_user(self, user_id: int):
+        """Giả lập cache thành viên; rỗng thì bot dùng avatar đã lưu."""
+        return self.users.get(user_id)
 
     async def fetch_channel(self, channel_id: int):
         return None

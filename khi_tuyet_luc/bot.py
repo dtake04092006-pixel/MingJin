@@ -39,12 +39,27 @@ class KhiTuyetLucBot(commands.Bot):
             else:
                 synced = await self.tree.sync()
                 log.info("đăng ký %s slash command toàn cục (có thể mất tới 1 giờ)", len(synced))
+        except discord.Forbidden:
+            log.error(
+                "đăng ký slash command bị chặn (403) — bot thiếu scope 'applications.commands' "
+                "hoặc chưa ở trong guild %s. Mời lại bot bằng link có scope "
+                "'bot applications.commands' rồi khởi động lại.",
+                self.settings.guild_id or "(toàn cục)",
+            )
         except discord.HTTPException:
             log.exception("đăng ký slash command thất bại")
         self.loop.create_task(self._flush_loop(), name="config-flush")
 
     async def on_ready(self) -> None:
         log.info("đã đăng nhập: %s (guild: %s)", self.user, len(self.guilds))
+        for guild in self.guilds:
+            log.info("  · đang ở server: %s (id %s)", guild.name, guild.id)
+        if self.settings.guild_id and all(g.id != self.settings.guild_id for g in self.guilds):
+            log.error(
+                "GUILD_ID=%s không có trong danh sách trên — bot chưa được mời vào server đó "
+                "hoặc ID sai. Sửa biến GUILD_ID hoặc mời bot vào đúng server.",
+                self.settings.guild_id,
+            )
         if not self._store_loaded:
             self._store_loaded = True
             await self.store.load(self)

@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _common import make_event  # noqa: E402
 
-from menh_tan import texts  # noqa: E402
-from menh_tan.embed import build_embed  # noqa: E402
+from khi_tuyet_luc import texts  # noqa: E402
+from khi_tuyet_luc.embed import build_embed  # noqa: E402
 
 
 def wrap(text: str, width: int) -> list[str]:

@@ -1,4 +1,4 @@
-# SPEC — Bot Discord "Mệnh Tẫn" (Giai đoạn 2)
+# SPEC — Bot Discord "Khí Tuyệt Lục" (Giai đoạn 2)
 
 > Trạng thái: bản chốt trước khi code (Draft v1.0)
 > Vị trí code: `bot code\bot\` — tách hẳn khỏi tracker, mỗi thứ một thư mục.
@@ -23,7 +23,7 @@ Chi phí: ảnh ~150 KB → payload ~200 KB. Không ảnh hưởng ngân sách t
 2. Gửi thông báo vào **nhiều kênh** Discord đã cấu hình, tối đa 10 kênh.
 3. Mỗi kênh có thể **bật/tắt ảnh riêng**, có mức mặc định chung.
 4. **Ảnh nằm trên, embed nằm dưới** (ảnh gửi dạng attachment thường, không nhét vào `embed.image`).
-5. Embed trang trí theo phong cách **kiếm hiệp / nhập ma**, tiếng Việt + Hán tự, bot tên **Mệnh Tẫn**.
+5. Embed trang trí theo phong cách **kiếm hiệp / nhập ma**, tiếng Việt + Hán tự, bot tên **Khí Tuyệt Lục**.
 6. Cấu hình **bền vững qua các lần deploy Render** (đĩa Render free là ephemeral).
 7. Chạy ổn trên Render free: bind `0.0.0.0:$PORT`, có `/health` để UptimeRobot ping.
 
@@ -36,7 +36,7 @@ Ngoài phạm vi: đọc SQLite của tracker (không với tới được từ 
 ```
    Máy bạn                                    Render (Docker/Python runtime)
 ┌──────────────────────┐   HTTPS POST      ┌──────────────────────────────────┐
-│ pbz_tracker          │  /api/deaths      │ menh-tan-bot                     │
+│ pbz_tracker          │  /api/deaths      │ khi-tuyet-luc-bot                     │
 │  · phát hiện DEAD    │ ────────────────► │  aiohttp  ──► Notifier           │
 │  · outbox + retry    │  X-Tracker-Token  │    /health    │                  │
 │  · ảnh JPEG          │  ── JSON + base64 │    /          │                  │
@@ -130,29 +130,29 @@ Trả 503 khi chưa có kênh là cố ý: thà giữ event trong outbox (retry 
 Thứ tự đọc khi khởi động:
 
 1. **Cache cục bộ** `data/config.json` (nhanh, có thể bị xoá khi Render restart).
-2. **Nguồn sự thật: một message ghim trong Discord.** Bot giữ 1 message chứa JSON (marker `MENH_TAN_CONFIG_V1`) trong kênh tên `menh-tan-config`; đọc/ghi bằng `channel.pins()`. Discord là DB → sống sót qua mọi lần deploy, không cần đĩa.
+2. **Nguồn sự thật: một message ghim trong Discord.** Bot giữ 1 message chứa JSON (marker `KTL_CONFIG_V1`) trong kênh tên `khi-tuyet-luc-config`; đọc/ghi bằng `channel.pins()`. Discord là DB → sống sót qua mọi lần deploy, không cần đĩa.
 3. **Env** (`CHANNELS`) làm nền tảng cuối, luôn được merge vào.
 
-`/menhtan setup` tạo (hoặc tìm) kênh `menh-tan-config`, ghim message cấu hình và trả lời hướng dẫn. Sau đó mọi lệnh khác đều ghi vào đó.
+`/ktl setup` tạo (hoặc tìm) kênh `khi-tuyet-luc-config`, ghim message cấu hình và trả lời hướng dẫn. Sau đó mọi lệnh khác đều ghi vào đó.
 
 ---
 
 ## 5. Lệnh slash
 
-Đăng ký dưới tên `menhtan`. Bắt buộc quyền **Quản lý máy chủ** với lệnh cấu hình.
+Đăng ký dưới tên `ktl`. Bắt buộc quyền **Quản lý máy chủ** với lệnh cấu hình.
 
 | Lệnh | Tham số | Tác dụng |
 |---|---|---|
-| `/menhtan setup` | — | tạo/tìm kênh `menh-tan-config`, ghim cấu hình |
-| `/menhtan add` | `channel`, `image` (tuỳ chọn) | thêm kênh nhận thông báo |
-| `/menhtan remove` | `channel` | bỏ kênh |
-| `/menhtan list` | — | bảng các kênh + chế độ ảnh + trạng thái |
-| `/menhtan image` | `channel`, `mode` = `on`/`off`/`default` | ép chế độ ảnh cho 1 kênh |
-| `/menhtan default-image` | `mode` = `on`/`off` | mặc định chung |
-| `/menhtan test` | `channel` (tuỳ chọn) | gửi 1 thông báo mẫu để xem embed ngay |
-| `/menhtan status` | — | cấu hình hiện tại + số event đã nhận + lần chết gần nhất |
-| `/menhtan pause` | — | tạm ngưng thông báo (tracker vẫn được nhận) |
-| `/menhtan resume` | — | chạy tiếp |
+| `/ktl setup` | — | tạo/tìm kênh `khi-tuyet-luc-config`, ghim cấu hình |
+| `/ktl add` | `channel`, `image` (tuỳ chọn) | thêm kênh nhận thông báo |
+| `/ktl remove` | `channel` | bỏ kênh |
+| `/ktl list` | — | bảng các kênh + chế độ ảnh + trạng thái |
+| `/ktl image` | `channel`, `mode` = `on`/`off`/`default` | ép chế độ ảnh cho 1 kênh |
+| `/ktl default-image` | `mode` = `on`/`off` | mặc định chung |
+| `/ktl test` | `channel` (tuỳ chọn) | gửi 1 thông báo mẫu để xem embed ngay |
+| `/ktl status` | — | cấu hình hiện tại + số event đã nhận + lần chết gần nhất |
+| `/ktl pause` | — | tạm ngưng thông báo (tracker vẫn được nhận) |
+| `/ktl resume` | — | chạy tiếp |
 
 Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 
@@ -162,7 +162,7 @@ Giới hạn 10 kênh (đủ dùng, tránh tự bắn rate limit của mình).
 
 Nguyên tắc thị giác:
 
-- Không dùng emoji — chỉ Hán tự và ký tự trang trí (`命盡`, `乂`, `血`, `煞`, `◈`, `︽`). Nhẹ, đúng chất, không bị Discord render lệch.
+- Không dùng emoji — chỉ Hán tự và ký tự trang trí (`氣絕錄`, `乂`, `血`, `煞`, `◈`, `︽`). Nhẹ, đúng chất, không bị Discord render lệch.
 - Bảng màu theo "tầng ma khí" (theo tổng số lần chết): `0x7B0C0C` → `0x9B0F0F` → `0xB81313` → `0xD41A1A`.
 - Mỗi lần gửi chọn ngẫu nhiên 1 câu thơ trong bộ 12 câu, không lặp lại câu vừa dùng.
 - Liên tử (chết trong vòng 90 s so với lần trước) → thêm dòng "ma khí nhập thể" và tiêu đề đổi hậu tố.
@@ -172,8 +172,8 @@ Mô phỏng bố cục:
 ```
 [ ảnh 1920x1080 — khung hình ngay TRƯỚC khi chữ DEAD hiện ]
 ┌───────────────────────────────────────────────┐
-│ Mệnh Tẫn                                      │  ← author
-│ 命盡 · Tứ Chuyển · Nhập Ma                    │  ← title
+│ Khí Tuyệt Lục                                      │  ← author
+│ 氣絕錄 · Tứ Chuyển · Nhập Ma                    │  ← title
 │ 乂乂乂乂乂乂乂乂乂乂乂                        │
 │ Ma khí quấn thân, huyết vụ tản như khói nhang │  ← description
 │ tàn. Ngươi ngã xuống — bia đá khắc thêm một   │
@@ -183,7 +183,7 @@ Mô phỏng bố cục:
 │ #3              │ #47            │ 2 phút 41 s │
 │ 煞 · Ma khí     │ ◈ Phiên        │ 連 · Liên tử│
 │ Tứ chuyển       │ 23:15 → nay    │ —           │
-│ 命盡 · đã khắc vào huyết thư                  │  ← footer
+│ 氣絕錄 · đã khắc vào huyết thư                  │  ← footer
 └───────────────────────────────────────────────┘
 ```
 
@@ -207,7 +207,7 @@ bot code/bot/
 ├─ render.yaml              # blueprint deploy 1 click
 ├─ .env.example
 ├─ run_local.bat            # chạy thử trên máy
-├─ menh_tan/
+├─ khi_tuyet_luc/
 │  ├─ __main__.py           # entrypoint: web server + bot, SIGTERM
 │  ├─ settings.py           # đọc env, validate
 │  ├─ texts.py              # kho câu thơ, Hán tự, bậc chuyển
@@ -226,13 +226,13 @@ bot code/bot/
 
 ## 8. Triển khai Render + UptimeRobot (tóm tắt, chi tiết ở README)
 
-1. Discord Developer Portal → tạo Application "Mệnh Tẫn" → Bot → copy token.
+1. Discord Developer Portal → tạo Application "Khí Tuyệt Lục" → Bot → copy token.
 2. Invite với scope `bot` + `applications.commands`; quyền: Send Messages, Embed Links, Attach Files, Read Message History, Manage Channels.
 3. Push thư mục `bot code/bot` lên một repo GitHub.
-4. Render → New → Web Service → repo đó, root `bot code/bot` (hoặc repo chỉ chứa bot), build `pip install -r requirements.txt`, start `python -m menh_tan`.
+4. Render → New → Web Service → repo đó, root `bot code/bot` (hoặc repo chỉ chứa bot), build `pip install -r requirements.txt`, start `python -m khi_tuyet_luc`.
 5. Set env: `DISCORD_TOKEN`, `API_TOKEN`, `GUILD_ID`.
 6. UptimeRobot: HTTP(s) monitor `https://<app>.onrender.com/health`, mỗi 5 phút.
-7. Trong server: `/menhtan setup` → `/menhtan add`.
+7. Trong server: `/ktl setup` → `/ktl add`.
 8. Sửa `config.toml` của tracker: `bot.endpoint = "https://<app>.onrender.com/api/deaths"`, `bot.token = "<API_TOKEN>"`.
 
 ---
@@ -267,5 +267,5 @@ Chạy được trên máy, không cần kết nối Discord, không cần Rende
 2. Đổi `image` của 1 kênh sang `off` → kênh đó chỉ nhận embed, kênh khác vẫn có ảnh.
 3. Deploy lại Render → cấu hình kênh vẫn còn.
 4. Tắt bot 10 phút rồi bật lại → tracker đẩy hết event tồn trong outbox, không mất lần chết nào.
-5. `/menhtan test` gửi được thông báo mẫu ngay.
+5. `/ktl test` gửi được thông báo mẫu ngay.
 6. `python tools\test_embed.py` và `python tools\test_webhook.py` PASS 100%.

@@ -77,7 +77,7 @@ async def handle_root(request: web.Request) -> web.Response:
         f"<tr><th>{html.escape(str(k))}</th><td>{html.escape(str(v))}</td></tr>" for k, v in status.items()
     )
     page = f"""<!doctype html>
-<html lang="vi"><meta charset="utf-8"><title>命盡 · Mệnh Tẫn</title>
+<html lang="vi"><meta charset="utf-8"><title>氣絕錄 · Khí Tuyệt Lục</title>
 <style>
  body{{background:#0d0808;color:#e7d5c9;font-family:Georgia,'Times New Roman',serif;margin:0;padding:48px 20px}}
  main{{max-width:640px;margin:0 auto;border:1px solid #3a1010;padding:32px;background:#120a0a}}
@@ -90,7 +90,7 @@ async def handle_root(request: web.Request) -> web.Response:
  .seal{{color:#5c1d1d;letter-spacing:6px;font-size:12px}}
 </style>
 <main>
- <h1>命盡 · Mệnh Tẫn</h1>
+ <h1>氣絕錄 · Khí Tuyệt Lục</h1>
  <p class="sub">H U Y Ế T &nbsp; T H Ư</p>
  <table>{rows}<tr><th>lần chết gần nhất</th><td>{html.escape(last_line)}</td></tr></table>
  <hr>

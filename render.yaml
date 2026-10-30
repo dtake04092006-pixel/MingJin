@@ -1,15 +1,15 @@
-# Render Blueprint — deploy nhanh bot Mệnh Tẫn
+# Render Blueprint — deploy nhanh bot Khí Tuyệt Lục
 # Cách dùng: repo GitHub của bạn (chứa thư mục bot) → Render → New → Blueprint → chọn repo.
 # Nếu bạn push CẢ thư mục "bot code" (bot nằm ở bot code/bot), bỏ comment dòng rootDir bên dưới.
 services:
   - type: web
-    name: menh-tan
+    name: khi-tuyet-luc
     runtime: python
     plan: free
     region: singapore
     # rootDir: bot code/bot
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m menh_tan
+    startCommand: python -m khi_tuyet_luc
     healthCheckPath: /health
     autoDeploy: true
     envVars:

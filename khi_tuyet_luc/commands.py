@@ -1,4 +1,4 @@
-"""Các lệnh slash /menhtan — cấu hình kênh, chế độ ảnh, thử nghiệm."""
+"""Các lệnh slash /ktl — cấu hình kênh, chế độ ảnh, thử nghiệm."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ def _can_send(channel: discord.abc.GuildChannel, me: discord.Member | None) -> s
 
 def build_group() -> app_commands.Group:
     group = app_commands.Group(
-        name="menhtan",
-        description="命盡 · quản lý thông báo tử vong từ Phantom Blade Zero",
+        name="ktl",
+        description="氣絕錄 · quản lý thông báo tử vong từ Phantom Blade Zero",
         default_permissions=discord.Permissions(manage_guild=True),
         guild_only=True,
     )
@@ -69,7 +69,7 @@ def build_group() -> app_commands.Group:
             saved = await store.save(force=True)
         except discord.Forbidden:
             await interaction.followup.send(
-                "Bot thiếu quyền **Quản lý kênh** để tạo `#menh-tan-config`.", ephemeral=True
+                "Bot thiếu quyền **Quản lý kênh** để tạo `#khi-tuyet-luc-config`.", ephemeral=True
             )
             return
         except discord.HTTPException as exc:
@@ -80,7 +80,7 @@ def build_group() -> app_commands.Group:
             f"Đã sẵn sàng. Cấu hình lưu tại {channel.mention}.",
             "Đừng xoá message ghim ở đó — đó là nơi giữ cấu hình qua các lần deploy.",
             f"Lưu lên Discord: {'thành công' if saved else 'chưa được, đang dùng cache cục bộ'}.",
-            "Tiếp theo: `/menhtan add` để chọn kênh nhận thông báo.",
+            "Tiếp theo: `/ktl add` để chọn kênh nhận thông báo.",
         ]
         await interaction.followup.send("\n".join(lines), ephemeral=True)
 
@@ -125,9 +125,9 @@ def build_group() -> app_commands.Group:
         store = _store(interaction)
         cfg = store.config
         if not cfg.channels:
-            await interaction.followup.send("Chưa có kênh nào. Dùng `/menhtan add`.", ephemeral=True)
+            await interaction.followup.send("Chưa có kênh nào. Dùng `/ktl add`.", ephemeral=True)
             return
-        lines = [f"**命盡 · {len(cfg.channels)}/{MAX_CHANNELS} kênh**"]
+        lines = [f"**氣絕錄 · {len(cfg.channels)}/{MAX_CHANNELS} kênh**"]
         for channel_id in store.channel_ids():
             mode = "ảnh" if store.image_for(channel_id) else "không ảnh"
             lines.append(f"· <#{channel_id}> — {mode}")
@@ -141,7 +141,7 @@ def build_group() -> app_commands.Group:
         await interaction.response.defer(ephemeral=True, thinking=True)
         store = _store(interaction)
         if not store.set_channel_image(channel.id, _mode_to_image(mode.value)):
-            await interaction.followup.send(f"{channel.mention} chưa có trong danh sách. Dùng `/menhtan add` trước.", ephemeral=True)
+            await interaction.followup.send(f"{channel.mention} chưa có trong danh sách. Dùng `/ktl add` trước.", ephemeral=True)
             return
         await store.save()
         current = "bật" if store.image_for(channel.id) else "tắt"
@@ -167,7 +167,7 @@ def build_group() -> app_commands.Group:
         if target is None:
             ids = store.channel_ids()
             if not ids:
-                await interaction.followup.send("Chưa có kênh nào. Dùng `/menhtan add` trước.", ephemeral=True)
+                await interaction.followup.send("Chưa có kênh nào. Dùng `/ktl add` trước.", ephemeral=True)
                 return
             target = interaction.client.get_channel(ids[0])  # type: ignore[attr-defined]
             if target is None:
@@ -186,7 +186,7 @@ def build_group() -> app_commands.Group:
         cfg = store.config
         state = getattr(interaction.client, "web_state", None)
         lines = [
-            "**命盡 · Mệnh Tẫn**",
+            "**氣絕錄 · Khí Tuyệt Lục**",
             f"kênh: {len(cfg.channels)}/{MAX_CHANNELS} · mặc định {'ảnh' if cfg.default_image else 'không ảnh'}",
             f"trạng thái: {'tạm ngưng' if cfg.paused else 'đang chạy'}",
             f"cấu hình đọc từ: {store.describe_source()}",
@@ -203,7 +203,7 @@ def build_group() -> app_commands.Group:
         store = _store(interaction)
         store.set_paused(True)
         await store.save()
-        await interaction.followup.send("Đã tạm ngưng. Bật lại bằng `/menhtan resume`.", ephemeral=True)
+        await interaction.followup.send("Đã tạm ngưng. Bật lại bằng `/ktl resume`.", ephemeral=True)
 
     @group.command(name="resume", description="Chạy tiếp thông báo")
     async def resume_cmd(interaction: discord.Interaction) -> None:

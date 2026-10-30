@@ -21,8 +21,8 @@ from .settings import Settings
 
 log = logging.getLogger(__name__)
 
-CONFIG_CHANNEL_NAME = "menh-tan-config"
-MARKER = "MENH_TAN_CONFIG_V1"
+CONFIG_CHANNEL_NAME = "khi-tuyet-luc-config"
+MARKER = "KTL_CONFIG_V1"
 MAX_CHANNELS = 10
 
 _JSON_BLOCK = re.compile(r"```json\s*(\{.*?\})\s*```", re.S)
@@ -113,7 +113,7 @@ class BotConfig:
 
 def render_message(cfg: BotConfig) -> str:
     body = json.dumps(cfg.to_dict(), ensure_ascii=False, separators=(",", ":"))
-    return f"{MARKER} · 命盡\n```json\n{body}\n```"
+    return f"{MARKER} · 氣絕錄\n```json\n{body}\n```"
 
 
 def parse_message(content: str) -> BotConfig | None:
@@ -285,8 +285,8 @@ class ConfigStore:
         channel = await guild.create_text_channel(
             CONFIG_CHANNEL_NAME,
             overwrites=overwrites,
-            topic="命盡 · cấu hình bot Mệnh Tẫn (đừng xoá message ghim)",
-            reason="Mệnh Tẫn: tạo kênh lưu cấu hình",
+            topic="氣絕錄 · cấu hình bot Khí Tuyệt Lục (đừng xoá message ghim)",
+            reason="Khí Tuyệt Lục: tạo kênh lưu cấu hình",
         )
         self._channel = channel
         self._message = None
@@ -304,7 +304,7 @@ class ConfigStore:
             if self._message is None:
                 self._message = await self._channel.send(content)
                 try:
-                    await self._message.pin(reason="Mệnh Tẫn: ghim cấu hình")
+                    await self._message.pin(reason="Khí Tuyệt Lục: ghim cấu hình")
                 except (discord.Forbidden, discord.HTTPException):
                     log.warning("không ghim được message cấu hình (thiếu quyền?)")
             else:

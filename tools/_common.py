@@ -18,9 +18,9 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:  # noqa: BLE001 - console cũ không hỗ trợ
         pass
 
-from menh_tan.event import DeathEvent  # noqa: E402
-from menh_tan.settings import Settings  # noqa: E402
-from menh_tan.store import ConfigStore  # noqa: E402
+from khi_tuyet_luc.event import DeathEvent  # noqa: E402
+from khi_tuyet_luc.settings import Settings  # noqa: E402
+from khi_tuyet_luc.store import ConfigStore  # noqa: E402
 
 # JPEG tối thiểu — chỉ cần đúng magic bytes, bot không giải mã ảnh
 MINIMAL_JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 256 + b"\xff\xd9"
@@ -134,7 +134,7 @@ class FakeBot:
     def __init__(self, channels: list[FakeChannel]) -> None:
         self._channels = {channel.id: channel for channel in channels}
         self.user = SimpleNamespace(
-            id=999, __str__=lambda self: "Mệnh Tẫn#0001", display_avatar=SimpleNamespace(url="https://x/y.png")
+            id=999, __str__=lambda self: "Khí Tuyệt Lục#0001", display_avatar=SimpleNamespace(url="https://x/y.png")
         )
         self.guilds: list = []
 

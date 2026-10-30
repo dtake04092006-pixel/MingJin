@@ -1,6 +1,6 @@
 """Entrypoint: chạy HTTP server (cho Render/UptimeRobot) và bot Discord cùng lúc.
 
-    python -m menh_tan
+    python -m khi_tuyet_luc
 """
 
 from __future__ import annotations
@@ -15,13 +15,13 @@ from pathlib import Path
 import discord
 
 from . import __version__
-from .bot import MenhTanBot
+from .bot import KhiTuyetLucBot
 from .notify import Notifier
 from .settings import Settings, SettingsError, load_dotenv
 from .store import ConfigStore
 from .web import WebState, start_server
 
-log = logging.getLogger("menh_tan")
+log = logging.getLogger("khi_tuyet_luc")
 
 
 def _configure_logging(level: str) -> None:
@@ -44,7 +44,7 @@ async def amain(settings: Settings) -> int:
     data_dir.mkdir(parents=True, exist_ok=True)
 
     store = ConfigStore(settings, data_dir)
-    bot = MenhTanBot(settings, store)
+    bot = KhiTuyetLucBot(settings, store)
     notifier = Notifier(bot, store)
     bot.notifier = notifier
 
@@ -87,14 +87,14 @@ def main() -> int:
     try:
         settings = Settings.from_env()
     except SettingsError as exc:
-        print(f"[menh_tan] {exc}", file=sys.stderr)
-        print("[menh_tan] cần DISCORD_TOKEN và API_TOKEN trong biến môi trường.", file=sys.stderr)
+        print(f"[khi_tuyet_luc] {exc}", file=sys.stderr)
+        print("[khi_tuyet_luc] cần DISCORD_TOKEN và API_TOKEN trong biến môi trường.", file=sys.stderr)
         return 2
 
     _configure_logging(settings.log_level)
     if loaded:
         log.info("nạp %s biến từ .env (chỉ dùng khi chạy trên máy)", loaded)
-    log.info("Mệnh Tẫn %s khởi động %s", __version__, settings.redacted())
+    log.info("Khí Tuyệt Lục %s khởi động %s", __version__, settings.redacted())
 
     try:
         return asyncio.run(amain(settings))

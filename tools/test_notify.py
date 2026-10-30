@@ -12,7 +12,7 @@ import discord  # noqa: E402
 
 from _common import Checker, FakeBot, FakeChannel, make_event, make_store  # noqa: E402
 
-from menh_tan.notify import Notifier  # noqa: E402
+from khi_tuyet_luc.notify import Notifier  # noqa: E402
 
 
 def build(channel_specs, **store_kwargs):
@@ -36,7 +36,7 @@ def main() -> int:
     check.eq("kênh 222 không ảnh", len(channels[1].files), 0)
     check.eq("kênh 222 vẫn có embed", len(channels[1].embeds), 1)
     check.ok("ảnh gửi kèm embed cùng message", bool(channels[0].embeds) and bool(channels[0].files))
-    check.eq("tên file ảnh", channels[0].sent[0]["file"].filename.startswith("menh-tan-"), True)
+    check.eq("tên file ảnh", channels[0].sent[0]["file"].filename.startswith("khi-tuyet-luc-"), True)
 
     # 2. event không có ảnh → chỉ embed
     bot, store, channels, notifier = build([(333, None)])

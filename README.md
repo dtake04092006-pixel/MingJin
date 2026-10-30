@@ -1,10 +1,10 @@
-# 命盡 · Mệnh Tẫn — bot Discord báo tử
+# 氣絕錄 · Khí Tuyệt Lục — bot Discord báo tử
 
 Bot nhận sự kiện chết từ **PBZ Death Tracker** (thư mục `..\`), rồi đăng vào một
 hoặc nhiều kênh Discord: **ảnh nằm trên, embed kiếm hiệp / nhập ma nằm dưới**.
 
 - Chạy 24/7 trên **Render.com (free)** dạng Web Service, giữ thức bằng **UptimeRobot**.
-- Cấu hình bằng lệnh `/menhtan` trong Discord, **sống sót qua mọi lần deploy**
+- Cấu hình bằng lệnh `/ktl` trong Discord, **sống sót qua mọi lần deploy**
   (vì được lưu trong một message ghim của chính Discord, không phải đĩa của Render).
 - Nhiều kênh, mỗi kênh bật/tắt ảnh riêng.
 
@@ -24,7 +24,7 @@ hoặc nhiều kênh Discord: **ảnh nằm trên, embed kiếm hiệp / nhập 
 
 ## 2. Tạo bot trên Discord Developer Portal
 
-1. https://discord.com/developers/applications → **New Application** → tên `Mệnh Tẫn` → Create.
+1. https://discord.com/developers/applications → **New Application** → tên `Khí Tuyệt Lục` → Create.
 2. Tab **Bot** → **Reset Token** → **Copy** → dán vào ô `DISCORD_TOKEN` (chỉ hiện 1 lần,
    mất thì reset lại). **Không gửi token cho ai, không commit lên GitHub.**
 3. Tab **Bot** → mục *Privileged Gateway Intents*: **không cần bật gì** (bot dùng slash command).
@@ -54,7 +54,7 @@ notepad .env        :: điền DISCORD_TOKEN, API_TOKEN, GUILD_ID rồi lưu
 run_local.bat
 ```
 
-Thấy log `đã đăng nhập: Mệnh Tẫn#xxxx` là được. Ctrl+C để dừng.
+Thấy log `đã đăng nhập: Khí Tuyệt Lục#xxxx` là được. Ctrl+C để dừng.
 `API_TOKEN` là chuỗi bí mật **bạn tự nghĩ ra** (ví dụ `pbz-2026-huyet-thu`), nó chỉ
 cần trùng với `token` trong `config.toml` của tracker.
 
@@ -77,13 +77,14 @@ Chỉ đẩy **thư mục bot**, không đẩy cả `bot code` (trong đó có f
 
 ```bat
 cd "D:\Game\Phantom Blade Zero\bot code\bot"
-git init
 git add .
-git commit -m "Menh Tan discord bot"
-git branch -M main
-git remote add origin https://github.com/<tài-khoản>/menh-tan-bot.git
-git push -u origin main
+git commit -m "Khi Tuyet Luc discord bot"
+git push
 ```
+
+Repo hiện tại: `https://github.com/dtake04092006-pixel/MingJin` (nhánh `main`).
+Nếu dựng lại từ đầu: `git init` → các lệnh trên → `git remote add origin <link-repo>`
+→ `git push -u origin main`.
 
 (`.gitignore` đã chặn `.env`, `data/`, `__pycache__`.)
 
@@ -105,7 +106,7 @@ chọn repo → Apply. Sau đó vào service → Environment → điền 3 bí m
 | Root Directory | để trống (nếu repo chỉ chứa bot) |
 | Runtime | **Python 3** |
 | Build Command | `pip install -r requirements.txt` |
-| Start Command | `python -m menh_tan` |
+| Start Command | `python -m khi_tuyet_luc` |
 | Instance Type | **Free** |
 | Health Check Path | `/health` |
 
@@ -122,13 +123,13 @@ chọn repo → Apply. Sau đó vào service → Environment → điền 3 bí m
 Bấm **Save Changes** → Render tự deploy. Chờ log:
 
 ```
-INFO  menh_tan.web: HTTP nghe trên 0.0.0.0:10000
-INFO  menh_tan.bot: đăng ký 10 slash command vào guild ...
-INFO  menh_tan.bot: đã đăng nhập: Mệnh Tẫn#xxxx (guild: 1)
-WARNING menh_tan.bot: chưa cấu hình kênh nào — chạy /menhtan add trong server
+INFO  khi_tuyet_luc.web: HTTP nghe trên 0.0.0.0:10000
+INFO  khi_tuyet_luc.bot: đăng ký 10 slash command vào guild ...
+INFO  khi_tuyet_luc.bot: đã đăng nhập: Khí Tuyệt Lục#xxxx (guild: 1)
+WARNING khi_tuyet_luc.bot: chưa cấu hình kênh nào — chạy /ktl add trong server
 ```
 
-Mở `https://<tên-app>.onrender.com/` → thấy trang **命盡 · Mệnh Tẫn** là web đã sống.
+Mở `https://<tên-app>.onrender.com/` → thấy trang **氣絕錄 · Khí Tuyệt Lục** là web đã sống.
 
 > Gói Free **ngủ sau 15 phút** không có truy cập; lần gọi đầu sau khi ngủ mất ~30–60 giây.
 > Bước 5 giải quyết việc này.
@@ -138,7 +139,7 @@ Mở `https://<tên-app>.onrender.com/` → thấy trang **命盡 · Mệnh Tẫ
 ## 5. UptimeRobot giữ bot thức
 
 1. https://uptimerobot.com → **Add New Monitor**.
-2. Type **HTTP(s)**, Friendly name `Mệnh Tẫn`, URL:
+2. Type **HTTP(s)**, Friendly name `Khí Tuyệt Lục`, URL:
    `https://<tên-app>.onrender.com/health`
 3. Monitoring Interval **5 minutes** → Create.
 4. (Tuỳ chọn) bật cảnh báo email khi bot chết.
@@ -153,21 +154,21 @@ Gói Render free có 750 giờ/tháng, một service chạy 24/7 chỉ tốn ~74
 Gõ trong server (cần quyền Quản lý máy chủ):
 
 ```
-/menhtan setup                 ← tạo #menh-tan-config, ghim cấu hình (LÀM ĐẦU TIÊN)
-/menhtan add channel:#huyết-thư
-/menhtan add channel:#nhật-ký image:false
-/menhtan test                  ← xem thử embed + ảnh
-/menhtan list
-/menhtan image channel:#nhật-ký mode:on
-/menhtan default-image mode:off
-/menhtan status
-/menhtan remove channel:#nhật-ký
-/menhtan pause                 ← tạm ngưng (tracker vẫn gửi được, bot bỏ qua)
-/menhtan resume
+/ktl setup                 ← tạo #khi-tuyet-luc-config, ghim cấu hình (LÀM ĐẦU TIÊN)
+/ktl add channel:#huyết-thư
+/ktl add channel:#nhật-ký image:false
+/ktl test                  ← xem thử embed + ảnh
+/ktl list
+/ktl image channel:#nhật-ký mode:on
+/ktl default-image mode:off
+/ktl status
+/ktl remove channel:#nhật-ký
+/ktl pause                 ← tạm ngưng (tracker vẫn gửi được, bot bỏ qua)
+/ktl resume
 ```
 
-`/menhtan setup` rất quan trọng: nó tạo message ghim giữ cấu hình. Đừng xoá kênh
-`#menh-tan-config` hay message ghim trong đó — mất là mất cấu hình (phải `setup` lại).
+`/ktl setup` rất quan trọng: nó tạo message ghim giữ cấu hình. Đừng xoá kênh
+`#khi-tuyet-luc-config` hay message ghim trong đó — mất là mất cấu hình (phải `setup` lại).
 
 ---
 
@@ -205,7 +206,7 @@ outbox** để gửi lại sau.
 ## 9. Cấu trúc code
 
 ```
-menh_tan/
+khi_tuyet_luc/
   __main__.py   entrypoint: HTTP server + bot Discord + SIGTERM
   settings.py   đọc env / .env, kiểm tra bắt buộc
   texts.py      câu thơ, Hán tự, bậc "chuyển", tầng ma khí
@@ -226,14 +227,14 @@ tools/
 
 | Hiện tượng | Nguyên nhân / cách sửa |
 |---|---|
-| Không thấy `/menhtan` | thiếu `GUILD_ID`, hoặc invite thiếu scope `applications.commands`; sửa env rồi **Manual Deploy** lại |
+| Không thấy `/ktl` | thiếu `GUILD_ID`, hoặc invite thiếu scope `applications.commands`; sửa env rồi **Manual Deploy** lại |
 | Log `Improper token` | token sai/hết hiệu lực → Reset Token trong portal, cập nhật env Render |
 | Tracker báo `HTTP 403` | `token` trong config.toml ≠ `API_TOKEN` trên Render |
-| Tracker báo `HTTP 503` | bot chưa có kênh → `/menhtan add` |
+| Tracker báo `HTTP 503` | bot chưa có kênh → `/ktl add` |
 | Tracker báo timeout lần đầu | Render đang ngủ → chờ 60 giây, event sẽ được gửi lại; bật UptimeRobot |
 | Ảnh không hiện, chỉ có embed | kênh đó đang `image:false`, hoặc event không có ảnh (footer ghi *vô ảnh*), hoặc bot thiếu quyền **Đính kèm tệp** |
-| Mất cấu hình sau khi deploy | chưa chạy `/menhtan setup` (không có message ghim để đọc lại) |
-| Bot im sau khi Render restart | `#menh-tan-config` bị xoá hoặc mất quyền Đọc lịch sử tin nhắn → cấp lại quyền, chạy lại `setup` |
+| Mất cấu hình sau khi deploy | chưa chạy `/ktl setup` (không có message ghim để đọc lại) |
+| Bot im sau khi Render restart | `#khi-tuyet-luc-config` bị xoá hoặc mất quyền Đọc lịch sử tin nhắn → cấp lại quyền, chạy lại `setup` |
 | Build fail trên Render | kiểm tra `PYTHON_VERSION=3.12.10` và file `requirements.txt` |
 
 ---

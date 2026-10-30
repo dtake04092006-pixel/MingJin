@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 FLUSH_INTERVAL_S = 60.0
 
 
-class MenhTanBot(commands.Bot):
+class KhiTuyetLucBot(commands.Bot):
     def __init__(self, settings: Settings, store: ConfigStore) -> None:
         intents = discord.Intents.default()  # không cần message_content
         super().__init__(command_prefix="!", intents=intents, help_command=None)
@@ -51,7 +51,7 @@ class MenhTanBot(commands.Bot):
             if self.store.config.channels:
                 log.info("kênh nhận thông báo: %s", self.store.config.describe())
             else:
-                log.warning("chưa cấu hình kênh nào — chạy /menhtan add trong server")
+                log.warning("chưa cấu hình kênh nào — chạy /ktl add trong server")
             if self.store._channel is not None and self.store._message is None:  # noqa: SLF001
                 await self.store.save()  # tạo message cấu hình nếu thiếu
 

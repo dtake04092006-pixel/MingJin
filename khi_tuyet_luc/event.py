@@ -144,7 +144,7 @@ class DeathEvent:
 
     @property
     def filename(self) -> str:
-        return f"menh-tan-{self.ts_utc.strftime('%Y%m%d-%H%M%S')}.jpg"
+        return f"khi-tuyet-luc-{self.ts_utc.strftime('%Y%m%d-%H%M%S')}.jpg"
 
     @property
     def is_test(self) -> bool:
@@ -152,7 +152,7 @@ class DeathEvent:
 
     @classmethod
     def sample(cls, *, death_no: int = 3, total: int = 47) -> "DeathEvent":
-        """Event mẫu cho lệnh /menhtan test — không cần tracker."""
+        """Event mẫu cho lệnh /ktl test — không cần tracker."""
         now = datetime.now(timezone.utc)
         return cls(
             id=f"test-{int(now.timestamp())}",

@@ -10,9 +10,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import Checker, make_event  # noqa: E402
 
-from menh_tan import texts  # noqa: E402
-from menh_tan.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
-from menh_tan.store import MARKER, BotConfig, parse_message, render_message  # noqa: E402
+from khi_tuyet_luc import texts  # noqa: E402
+from khi_tuyet_luc.embed import MAX_TOTAL, build_embed, embed_length, validate_embed  # noqa: E402
+from khi_tuyet_luc.store import MARKER, BotConfig, parse_message, render_message  # noqa: E402
 
 FIELD_ORDER = ["血 · Tử kỳ", "命 · Tổng kiếp", "時 · Cách kiếp trước", "煞 · Ma khí", "◈ Phiên", "連 · Liên tử"]
 

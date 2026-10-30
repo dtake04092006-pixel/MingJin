@@ -72,7 +72,7 @@ def _title(event: DeathEvent, streak: int) -> str:
         turn = f"{vi} Chuyển"
     else:
         turn = "Vô danh chuyển"
-    return _clip(f"命盡 · {turn}{tier.suffix}{texts.streak_suffix(streak)}", MAX_TITLE)
+    return _clip(f"氣絕錄 · {turn}{tier.suffix}{texts.streak_suffix(streak)}", MAX_TITLE)
 
 
 def _description(verse: str, streak_line: str | None) -> str:
@@ -84,7 +84,7 @@ def _description(verse: str, streak_line: str | None) -> str:
 
 
 def _footer_text(event: DeathEvent, *, test: bool) -> str:
-    parts = ["命盡 · đã khắc vào huyết thư"]
+    parts = ["氣絕錄 · đã khắc vào huyết thư"]
     if test:
         parts.append("thông báo thử")
     if not event.has_image:
@@ -105,7 +105,7 @@ def build_embed(
     streak: int = 1,
     streak_line: str | None = None,
     test: bool = False,
-    bot_name: str = "Mệnh Tẫn",
+    bot_name: str = "Khí Tuyệt Lục",
     bot_avatar: str | None = None,
 ) -> discord.Embed:
     tier = texts.tier_for(event.total_deaths)

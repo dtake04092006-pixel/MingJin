@@ -13,8 +13,8 @@ from _common import MINIMAL_PNG, Checker, make_store  # noqa: E402
 
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
-from menh_tan.notify import Delivery  # noqa: E402
-from menh_tan.web import WebState, build_app  # noqa: E402
+from khi_tuyet_luc.notify import Delivery  # noqa: E402
+from khi_tuyet_luc.web import WebState, build_app  # noqa: E402
 
 TOKEN = "secret-token"
 HEADERS = {"X-Tracker-Token": TOKEN}
@@ -67,7 +67,7 @@ async def exercise() -> Checker:
         response = await client.get("/")
         body = await response.text()
         check.eq("GET / → 200", response.status, 200)
-        check.ok("trang chủ có tên bot", "Mệnh Tẫn" in body)
+        check.ok("trang chủ có tên bot", "Khí Tuyệt Lục" in body)
         check.ok("trang chủ không lộ token", TOKEN not in body)
 
         # thiếu token
